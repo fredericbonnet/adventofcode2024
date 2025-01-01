@@ -1,9 +1,12 @@
+import javascript:console (console)
 import node:fs (fs)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 [list] eval {import adventofcode2024 (sortStrings)}
 
 # --- Day 23: LAN Party ---
+
+console group "Part One"
 
 set example "kh-tc
 qp-kh
@@ -42,6 +45,7 @@ set input $example
 
 set input [fs readFileSync adventofcode2024/23.input.txt [dict (encoding utf8)]]
 
+console time parse
 set nodes [dict ()]
 set links [dict ()]
 list [string $input split \n] foreach line {
@@ -55,8 +59,9 @@ list [string $input split \n] foreach line {
         $b [dict [get nodes($b) ()] add $a true] 
     )]
 }
+console timeEnd parse
 
-
+console time compute
 set nbt 0
 set groups [dict ()]
 dict $links foreach (link) {
@@ -74,11 +79,17 @@ dict $links foreach (link) {
         }
     }
 }
-get nbt # => result = 1149
+console timeEnd compute
+console log "result =" $nbt # => result = 1149
+
+console groupEnd "Part One"
 
 # --- Part Two ---
 
+console group "Part Two"
+
 # Greedy algorithm is good enough
+console time compute
 set allcliques [dict ()]
 set maxclique [dict ()]
 dict $nodes foreach (first neighbors) {
@@ -111,4 +122,7 @@ list [list [dict $maxclique keys] sortStrings] foreach n {
         set password ${password},${n}
     }
 }
-get password # => result = as,co,do,kh,km,mc,np,nt,un,uq,wc,wz,yo
+console timeEnd compute
+console log "result =" $password # => result = as,co,do,kh,km,mc,np,nt,un,uq,wc,wz,yo
+
+console groupEnd "Part Two"

@@ -1,9 +1,12 @@
+import javascript:console (console)
 import node:fs (fs)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 import adventofcode2024 (xor mod floor)
 
 # --- Day 22: Monkey Market ---
+
+console group "Part One"
 
 set example "1
 10
@@ -86,17 +89,22 @@ proc nthSecret {secret nb} {
     get s
 }
 
-import javascript:console (console)
+console time compute
 set sum 0
 set i 0
 list $secrets foreach secret {
     set i [$i + 1]
-    if [[mod $i 10] == 0] {console log $i}
+    if [[mod $i 10] == 0] {console timeLog compute ${i}/[list $secrets length]}
     set sum [$sum + [nthSecret $secret 2000]]
 }
-get sum # => result = 17960270302
+console timeEnd compute
+console log "result =" $sum # => result = 17960270302
+
+console groupEnd "Part One"
 
 # --- Part Two ---
+
+console group "Part Two"
 
 macro price {secret} {mod $secret 10}
 
@@ -132,9 +140,10 @@ namespace memo {
     macro maxPrice {} {prices max}
 }
 
+console time compute
 set buyer 0
 list $secrets foreach secret {
-    if [[mod $buyer 10] == 0] {console log $buyer}
+    if [[mod $buyer 10] == 0] {console timeLog compute ${buyer}/[list $secrets length]}
     set p1 [
         set s $secret
         |> price
@@ -172,4 +181,8 @@ list $secrets foreach secret {
     }
     set buyer [$buyer + 1]
 }
-memo maxPrice # => result = 2042
+set result [memo maxPrice]
+console timeEnd compute
+console log "result =" $result # => result = 2042
+
+console groupEnd "Part Two"

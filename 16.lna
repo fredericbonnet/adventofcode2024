@@ -1,6 +1,9 @@
+import javascript:console (console)
 import node:fs (fs)
 
 # --- Day 16: Reindeer Maze ---
+
+console group "Part One"
 
 set example "###############
 #.......#....E#
@@ -40,6 +43,7 @@ set input $example2
 
 set input [fs readFileSync adventofcode2024/16.input.txt [dict (encoding utf8)]]
 
+console time parse
 set walls [dict ()]
 macro wall {x y} {dict $walls has ${x},${y}}
 set y 0
@@ -55,6 +59,7 @@ while {$i < [string $input length]} {
     set (x i) ([$x + 1] [$i + 1])
 }
 set height $y
+console timeEnd parse
 
 # Maze = weighted directed graph
 # Vertices = (x,y,o) where x,y = square coords and o = orientation nsew
@@ -69,6 +74,7 @@ macro resetMaze {} {
     }
 }
 
+console time compute
 resetMaze
 set y 0
 while {$y < $height} {
@@ -133,10 +139,16 @@ list (n s e w) foreach o {
     set score [getScore ($*end $o)]
     if [&& [$score > 0] [$score < $minScore]] {set minScore $score}
 }
-get minScore # => result = 122492
+console timeEnd compute
+console log "result =" $minScore # => result = 122492
+
+console groupEnd "Part One"
 
 # --- Part Two ---
 
+console group "Part Two"
+
+console time compute
 # Follow paths in reverse for every link whose weight matches score difference
 set previousNodes [list ()]
 list (n s e w) foreach o {
@@ -160,4 +172,7 @@ while {[list $previousNodes length] > 0} {
         }
     }
 }
-dict $path size # => result = 520
+console timeEnd compute
+console log "result =" [dict $path size] # => result = 520
+
+console groupEnd "Part Two"

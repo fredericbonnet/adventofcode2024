@@ -5,6 +5,8 @@ load adventofcode2024/adventofcode2024 adventofcode2024
 
 # --- Day 6: Guard Gallivant ---
 
+console group "Part One"
+
 set example "....#.....
 .........#
 ..........
@@ -21,6 +23,7 @@ set lines [string $input split \n]
 set height [[list $lines length] - 1] # discard last empty line
 set width [string $lines[0] length]
 
+console time parse
 set blocks [dict ()]
 set y 0
 while {$y < $height} {
@@ -35,6 +38,7 @@ while {$y < $height} {
     }
     set y [$y + 1]
 }
+console timeEnd parse
 
 proc advance {width height blocks pos dir} {
     set (x y) $pos
@@ -50,6 +54,7 @@ proc advance {width height blocks pos dir} {
     }
 }
 
+console time compute
 set path [dict ()]
 set pos $initialpos
 set dir (0 -1)
@@ -59,16 +64,22 @@ while true {
     set path [dict $path add ${x},${y} true]
     set (pos dir) [advance $width $height $blocks $pos $dir]
 }
-dict $path size # => result = 4656
+console timeEnd compute
+console log "result =" [dict $path size] # => result = 4656
+
+console groupEnd "Part One"
 
 # --- Part Two ---
 
+console group "Part Two"
+
 # Brute force by placing a block on each of the original path
+console time compute
 set nb [dict $path size]
 set i 0
 set nbObstructions 0
 dict $path foreach (blockpos) {
-    console log "[set i [$i + 1]]/$nb $blockpos"
+    console timeLog compute "[set i [$i + 1]]/$nb $blockpos"
     set (x y) [tuple [string $blockpos split ,]]
     set blocks2 [dict $blocks add ${x},${y} true]
     
@@ -89,4 +100,7 @@ dict $path foreach (blockpos) {
         set (pos dir) [advance $width $height $blocks2 $pos $dir]
     }
 }
-get nbObstructions # => result =
+console timeEnd compute
+console log "result =" $nbObstructions # => result = 1575
+
+console groupEnd "Part Two"

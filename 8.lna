@@ -1,9 +1,12 @@
+import javascript:console (console)
 import node:fs (fs)
 import javascript:RegExp (RegExp)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
 # --- Day 8: Resonant Collinearity ---
+
+console group "Part One"
 
 set example "............
 ........0...
@@ -20,6 +23,7 @@ set example "............
 "
 set input [fs readFileSync adventofcode2024/8.input.txt [dict (encoding utf8)]]
 
+console time parse
 set re [RegExp new {[0-9A-Za-z]}]
 set antennas [dict ()]
 set y 0
@@ -36,7 +40,9 @@ list [string $input split \n] foreach line {
 }
 set width $x
 set height $y
+console timeEnd parse
 
+console time compute
 set antinodes [dict ()]
 dict $antennas foreach (_ v) {
     set positions $v
@@ -53,10 +59,16 @@ dict $antennas foreach (_ v) {
         }
     }
 }
-dict $antinodes size # => result = 398
+console timeEnd compute
+console log "result =" [dict $antinodes size] # => result = 398
+
+console groupEnd "Part One"
 
 # --- Part Two ---
 
+console group "Part Two"
+
+console time compute
 set antinodes [dict ()]
 dict $antennas foreach (_ v) {
     set positions $v
@@ -74,10 +86,12 @@ dict $antennas foreach (_ v) {
         }
     }
 }
-dict $antinodes size # => result = 1333
+console timeEnd compute
+console log "result =" [dict $antinodes size] # => result = 1333
+
+console groupEnd "Part Two"
 
 proc dump {width height antinodes} {
-    import javascript:console (console)
     set y 0
     while {$y < $height} {
         set line ""

@@ -1,4 +1,8 @@
+import javascript:console (console)
+
 # --- Day 2: Red-Nosed Reports ---
+
+console group "Part One"
 
 let example (
     (7 6 4 2 1)
@@ -28,14 +32,21 @@ proc isSafe {(list report)} {
     return true
 }
 
+console time compute
 set nbSafe 0
 list $input foreach report {    
     if [isSafe $report] {set nbSafe [$nbSafe + 1]}
 }
-get nbSafe # => result = 534
+console timeEnd compute
+console log "result =" $nbSafe # => result = 534
+
+console groupEnd "Part One"
 
 # --- Part Two ---
 
+console group "Part Two"
+
+console time compute
 set nbSafe 0
 list $input foreach report {    
     if [isSafe $report] {
@@ -52,4 +63,7 @@ list $input foreach report {
     }
 
 }
-get nbSafe # => result = 534
+console timeEnd compute
+console log "result =" $nbSafe # => result = 577
+
+console groupEnd "Part Two"

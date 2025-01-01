@@ -1,3 +1,4 @@
+import javascript:console (console)
 import node:fs (fs)
 load adventofcode2024/adventofcode2024 adventofcode2024
 import adventofcode2024 (xor pow2)
@@ -5,6 +6,8 @@ import adventofcode2024 (xor pow2)
 [list] eval {import adventofcode2024 (sortStrings)}
 
 # --- Day 24: Crossed Wires ---
+
+console group "Part One"
 
 set example "x00: 1
 x01: 0
@@ -58,6 +61,7 @@ set input $example
 
 set input [fs readFileSync adventofcode2024/24.input.txt [dict (encoding utf8)]]
 
+console time parse
 set (section1 section2) [tuple [string $input split \n\n]]
 set wires [dict ()]
 list [string $section1 split \n] foreach line {
@@ -70,6 +74,7 @@ list [string $section2 split \n] foreach line {
     set (input1 gate input2 _ output) [tuple [string $line split " "]]
     set connections [list $connections append ($(input1 gate input2 output))]
 }
+console timeEnd parse
 
 macro AND {op1 op2} {[&& [$op1 == 1] [$op2 == 1]] ? 1 0}
 macro OR {op1 op2} {[|| [$op1 == 1] [$op2 == 1]] ? 1 0}
@@ -77,6 +82,7 @@ macro XOR {op1 op2} {xor $op1 $op2}
 
 set initialwires $wires
 
+console time compute
 set waiting $connections
 while {[list $waiting length] > 0} {
     set active $waiting
@@ -97,7 +103,10 @@ dict $wires foreach (name value) {
         set number [$number + [pow2 $index]]
     }
 }
-get number # => result = 52038112429798
+console timeEnd compute
+console log "result =" $number # => result = 52038112429798
+
+console groupEnd "Part One"
 
 # --- Part Two ---
 
@@ -284,3 +293,5 @@ set initialwires $wires
 # jqn <-> cph
 #
 # => result = cph,jqn,kwb,qkf,tgr,z12,z16,z24
+
+exit

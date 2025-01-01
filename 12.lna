@@ -1,8 +1,11 @@
+import javascript:console (console)
 import node:fs (fs)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
 # --- Day 12: Garden Grots ---
+
+console group "Part One"
 
 set example "RRRRIICCFF
 RRRRIICCCF
@@ -17,6 +20,7 @@ MMMISSJEEE
 "
 set input [fs readFileSync adventofcode2024/12.input.txt [dict (encoding utf8)]]
 
+console time parse
 set grid [list ()]
 list [string $input split \n] foreach line {
     if [string $line == ""] {break}
@@ -28,6 +32,7 @@ list [string $input split \n] foreach line {
 }
 set width [list $row length]
 set height [list $grid length]
+console timeEnd parse
 
 macro min {a b} {get [[$a < $b] ? a b]}
 
@@ -37,6 +42,7 @@ macro resolve {alias} {
     if [dict $aliases has $alias] {resolve $aliases($alias)} else {get alias}
 }
 
+console time compute
 set y 0
 set nextregion 0
 while {$y < $height} {
@@ -97,10 +103,16 @@ set price 0
 dict $areas foreach (region area) {
     set price [$price + [$area * $perimeters($region)]]
 }
-get price # => result = 1396562
+console timeEnd compute
+console log "result =" $price # => result = 1396562
+
+console groupEnd "Part One"
 
 # --- Part Two ---
 
+console group "Part Two"
+
+console time compute
 set sides [dict ()]
 set y 0
 while {$y < $height} {
@@ -138,4 +150,7 @@ set price 0
 dict $areas foreach (region area) {
     set price [$price + [$area * $sides($region)]]
 }
-get price # => result = 844132
+console timeEnd compute
+console log "result =" $price # => result = 844132
+
+console groupEnd "Part Two"

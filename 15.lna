@@ -1,8 +1,11 @@
+import javascript:console (console)
 import node:fs (fs)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
 # --- Day 15: Warehouse Woes ---
+
+console group "Part One"
 
 set example "##########
 #..O..O.O#
@@ -42,6 +45,7 @@ set input [fs readFileSync adventofcode2024/15.input.txt [dict (encoding utf8)]]
 
 set (warehouse movements) [tuple [string $input split \n\n]]
 
+console time parse
 set walls [dict ()]
 set boxes [dict ()]
 set y 0
@@ -57,7 +61,7 @@ while {$i < [string $warehouse length]} {
     set (x i) ([$x + 1] [$i + 1])
 }
 set (origwalls origboxes origpos) $(walls boxes pos)
-
+console timeEnd parse
 
 macro move {x y dx dy} {
     if {
@@ -80,6 +84,7 @@ macro move {x y dx dy} {
     }
 }
 
+console time compute
 set (walls boxes pos) $(origwalls origboxes origpos)
 
 set (x y) $pos
@@ -102,9 +107,14 @@ dict $boxes foreach (p) {
     set (x y) [tuple [string $p split ,]]
     set sum [$sum + $x + $y * 100]
 }
-get sum # => result = 1383666
+console timeEnd compute
+console log "result =" $sum # => result = 1383666
+
+console groupEnd "Part One"
 
 # --- Part Two ---
+
+console group "Part Two"
 
 set example3 "#######
 #...#.#
@@ -116,10 +126,11 @@ set example3 "#######
 
 <vv<<^^<<^^
 "
-set input $example3
+# set input $example3
 
 set (warehouse movements) [tuple [string $input split \n\n]]
 
+console time parse
 set walls [dict ()]
 set boxes [dict ()]
 set y 0
@@ -135,6 +146,7 @@ while {$i < [string $warehouse length]} {
     set (x i) ([$x + 2] [$i + 1])
 }
 set (origwalls origboxes origpos) $(walls boxes pos)
+console timeEnd parse
 
 macro movable {x y dx dy} {
     if {dict $walls has [$x + $dx],[$y + $dy]} {
@@ -174,7 +186,7 @@ macro move {x y dx dy} {
     } else {false}
 }
 
-
+console time compute
 set (walls boxes pos) $(origwalls origboxes origpos)
 
 set (x y) $pos
@@ -197,5 +209,7 @@ dict $boxes foreach (p dx) {
     set (x y) [tuple [string $p split ,]]
     if [$dx == 1] {set sum [$sum + $x + $y * 100]}
 }
-get sum # => result = 1412866
+console timeEnd compute
+console log "result =" $sum # => result = 1412866
 
+console groupEnd "Part Two"

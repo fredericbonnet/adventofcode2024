@@ -2,6 +2,8 @@ import javascript:console (console)
 
 # --- Day 11: Plutonian Pebbles ---
 
+console group "Part One"
+
 set example [list (0 1 10 99 999)]
 set input [source adventofcode2024/11.input.lna]
 
@@ -22,16 +24,22 @@ proc blink {stones} {
     }
 }
 
+console time compute
 set stones $input
 set i 0
 while {$i < 25} {
     set stones [blink $stones]
     set i [$i + 1]
-    console log $i => [list $stones length]
+    console timeLog compute ${i}/25 => [list $stones length]
 }
-list $stones length # => result = 186424
+console timeEnd compute
+console log "result =" [list $stones length] # => result = 186424
+
+console groupEnd "Part One"
 
 # --- Part Two ---
+
+console group "Part Two"
 
 namespace store {
     macro has {stone nb} {
@@ -62,12 +70,16 @@ closure stonelength {stone nb} {
     }
 }
 
+console time compute
 set stones $input
 set i 0
-while {$i <= 25} {
-    console log ${i}/25
-    stonelengths $stones $i
+while {$i <= 75} {
+    set result [stonelengths $stones $i]
+    console timeLog compute ${i}/75 => $result
     set i [$i + 1]
 }
-stonelengths $stones 25 # => 186424
-stonelengths $stones 75 # => result = 219838428124832
+set result [stonelengths $stones 75]
+console timeEnd compute
+console log "result =" $result # => result = 219838428124832
+
+console groupEnd "Part Two"

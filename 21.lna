@@ -1,8 +1,11 @@
+import javascript:console (console)
 import node:fs (fs)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
 # --- Day 21: Keypad Conundrum ---
+
+console group "Part One"
 
 # +---+---+---+
 # | 7 | 8 | 9 |
@@ -177,6 +180,7 @@ proc getDirectionalSequence {buttons} {
     return $sequence
 }
 
+console time compute
 set complexity 0
 list $codes foreach buttons {
     set numpart [string $buttons range 0 2]
@@ -188,9 +192,14 @@ list $codes foreach buttons {
     ]
     set complexity [$complexity + $numpart * $len]
 }
-get complexity # => result = 177814
+console timeEnd compute
+console log "result =" $complexity # => result = 177814
+
+console groupEnd "Part One"
 
 # --- Part Two ---
+
+console group "Part Two"
 
 proc sequenceToPairs {buttons} {
     set pairs [list ()]
@@ -342,6 +351,7 @@ proc directionalTransition {from to} {
     }
 }
 
+console time compute
 set complexity 0
 list $codes foreach buttons {
     set numpart [string $buttons range 0 2]
@@ -351,4 +361,7 @@ list $codes foreach buttons {
     ]
     set complexity [$complexity + $numpart * $len]
 }
-get complexity # => result = 220493992841852
+console timeEnd compute
+console log "result =" $complexity # => result = 220493992841852
+
+console groupEnd "Part Two"

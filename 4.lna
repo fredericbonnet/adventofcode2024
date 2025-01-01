@@ -1,6 +1,9 @@
+import javascript:console (console)
 import node:fs (fs)
 
 # --- Day 4: Ceres Search ---
+
+console group "Part One"
 
 let example "MMMSXXMASM
 MSAMXMSMSA
@@ -28,6 +31,7 @@ proc matchXMAS {input i stride} {
     return 1
 }
 
+console time compute
 set stridesXMAS [list (
     1           # Horizontal
     $len        # Vertical
@@ -43,9 +47,14 @@ while {$i < [string $input length]} {
     }
     set i [$i + 1]
 }
-get count # => result = 2358
+console timeEnd compute
+console log "result =" $count # => result = 2358
+
+console groupEnd "Part One"
 
 # --- Part Two ---
+
+console group "Part Two"
 
 proc matchMAS {input i stride} {
     if [|| {[$i - $stride] < 0} {[$i - $stride] >= [string $input length]}] {return false}
@@ -56,6 +65,7 @@ proc matchMAS {input i stride} {
     return true
 }
 
+console time compute
 set stride1 [$len - 1]
 set stride2 [$len + 1]
 
@@ -68,4 +78,7 @@ while {$i < [string $input length]} {
     if [&& [matchMAS $input $i -$stride1] [matchMAS $input $i -$stride2]] {set count [$count + 1]}
     set i [$i + 1]
 }
-get count # => result = 1737
+console timeEnd compute
+console log "result =" $count # => result = 1737
+
+console groupEnd "Part Two"

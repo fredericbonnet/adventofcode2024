@@ -1,8 +1,11 @@
+import javascript:console (console)
 import node:fs (fs)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
 # --- Day 5: Print Queue ---
+
+console group "Part One"
 
 set example "47|53
 97|13
@@ -35,11 +38,13 @@ set example "47|53
 "
 let input [fs readFileSync adventofcode2024/5.input.txt [dict (encoding utf8)]]
 
+console time parse
 set (rules updates) [tuple [string $input split \n\n]]
 set ruleset [dict ()]
 list [string $rules split \n] foreach rule {
     set ruleset [dict $ruleset add $rule true]
 }
+console timeEnd parse
 
 proc getBrokenRule {pages ruleset} {
     set len [list $pages length]
@@ -57,6 +62,7 @@ proc getBrokenRule {pages ruleset} {
     return (-1 -1)
 }
 
+console time compute
 set sum 0
 list [string $updates split \n] foreach line {
     if [string "" == $line] {break}
@@ -66,9 +72,14 @@ list [string $updates split \n] foreach line {
         set sum [$sum + $pages[[[list $pages length] - 1] / 2]]
     }
 }
-get sum # => result = 4924
+console timeEnd compute
+console log "result =" $sum # => result = 4924
+
+console groupEnd "Part One"
 
 # --- Part Two ---
+
+console group "Part Two"
 
 proc swapPages {pages i j} {
     list $pages
@@ -76,6 +87,7 @@ proc swapPages {pages i j} {
     |> list replace $j $j ($pages[$i])
 }
 
+console time compute
 set sum 0
 list [string $updates split \n] foreach line {
     if [string "" == $line] {break}
@@ -87,4 +99,7 @@ list [string $updates split \n] foreach line {
     }
     set sum [$sum + $pages[[[list $pages length] - 1] / 2]]
 }
-get sum # => result = 6085
+console timeEnd compute
+console log "result =" $sum # => result = 6085
+
+console groupEnd "Part Two"

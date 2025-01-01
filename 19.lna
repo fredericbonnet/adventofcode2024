@@ -1,9 +1,12 @@
+import javascript:console (console)
 import node:fs (fs)
 import javascript:RegExp (RegExp)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
 # --- Day 19: Linen Layout ---
+
+console group "Part One"
 
 set example "r, wr, b, g, bwu, rb, gb, br
 
@@ -21,6 +24,7 @@ set input $example
 
 set input [fs readFileSync adventofcode2024/19.input.txt [dict (encoding utf8)]]
 
+console time parse
 set (p d) [tuple [string $input split \n\n]]
 set patterns [string $p split ", "]
 
@@ -33,15 +37,22 @@ list $patterns foreach p {
     }
 }
 set re [RegExp new "^($r)+\$"]
+console timeEnd parse
 
+console time compute
 set nb 0
 list [string $d split \n] foreach design {
     if [string $design == ""] {break}
     set nb [$nb + [catch {dict [RegExp exec $re $design]; 1} error _ {0}]]
 }
-get nb # => result = 342
+console timeEnd compute
+console log "result =" $nb # => result = 342
+
+console groupEnd "Part One"
 
 # --- Part Two ---
+
+console group "Part Two"
 
 namespace memo {
     macro has {pattern design} {
@@ -77,18 +88,21 @@ proc matches {patterns design} {
     return $nb
 }
 
-import javascript:console (console)
 import adventofcode2024 (mod)
 
-
+console time compute
 set nb 0
 set i 0
-list [string $d split \n] foreach design {
+set designs [string $d split \n]
+list $designs foreach design {
     if [string $design == ""] {break}
     if [catch {dict [RegExp exec $re $design]; true} error _ {false}] {
         set nb [$nb + [matches $patterns $design]]
     }
     set i [$i + 1]
-    if [[mod $i 10] == 0] {console log $i $nb}
+    if [[mod $i 10] == 0] {console timeLog compute ${i}/[list $designs length] => $nb}
 }
-get nb # => result = 891192814474630
+console timeEnd compute
+console log "result =" $nb # => result = 891192814474630
+
+console groupEnd "Part Two"

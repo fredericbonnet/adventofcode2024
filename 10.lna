@@ -1,8 +1,11 @@
+import javascript:console (console)
 import node:fs (fs)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
 # --- Day 10: Hoof It ---
+
+console group "Part One"
 
 set example "89010123
 78121874
@@ -15,6 +18,7 @@ set example "89010123
 "
 set input [fs readFileSync adventofcode2024/10.input.txt [dict (encoding utf8)]]
 
+console time parse
 set grid [list ()]
 set starts [list ()]
 list [string $input split \n] foreach line {
@@ -25,6 +29,7 @@ list [string $input split \n] foreach line {
     }
     set grid [list $grid append ($row)]
 }
+console timeEnd parse
 
 proc getReachables {grid x y} {
     set reachable [list ()]
@@ -56,6 +61,7 @@ proc getScore {grid x y} {
     return [dict $reachables size]
 }
 
+console time compute
 set score 0
 set y 0
 list $grid foreach row {
@@ -68,9 +74,14 @@ list $grid foreach row {
     }
     set y [$y + 1]
 }
-get score # => result = 659
+console timeEnd compute
+console log "result =" $score # => result = 659
+
+console groupEnd "Part One"
 
 # --- Part Two ---
+
+console group "Part Two"
 
 proc getScore2 {grid x y} {
     if [$grid[$y][$x] == 9] {return 1}
@@ -81,6 +92,7 @@ proc getScore2 {grid x y} {
     return $nb
 }
 
+console time compute
 set score 0
 set y 0
 list $grid foreach row {
@@ -93,4 +105,7 @@ list $grid foreach row {
     }
     set y [$y + 1]
 }
-get score # => result = 659
+console timeEnd compute
+console log "result =" $score # => result = 659
+
+console groupEnd "Part Two"

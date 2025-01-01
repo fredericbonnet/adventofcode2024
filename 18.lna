@@ -1,8 +1,11 @@
+import javascript:console (console)
 import node:fs (fs)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
 # --- Day 18: RAM Run ---
+
+console group "Part One"
 
 set example "5,4
 4,2
@@ -38,6 +41,7 @@ set input [fs readFileSync adventofcode2024/18.input.txt [dict (encoding utf8)]]
 set size 70
 set max 1024
 
+console time parse
 set corrupted [dict ()]
 macro corrupted {x y} {dict $corrupted has ${x},${y}}
 list [string $input split "\n"] foreach coords {
@@ -47,6 +51,7 @@ list [string $input split "\n"] foreach coords {
 }
 set start (0 0)
 set end ($size $size)
+console timeEnd parse
 
 # Maze = directed graph
 # Vertices = (x,y)
@@ -84,6 +89,7 @@ macro makeMaze {} {
         set y [$y + 1]
     }
 }
+console time compute
 makeMaze
 
 # Now that we have the graph, find the shorted path between S and E
@@ -109,9 +115,15 @@ macro computeDistances {} {
     }
     getDistance $end
 }
-computeDistances # => result = 248
+set result [computeDistances]
+console timeEnd compute
+console log "result =" $result # => result = 248
+
+console groupEnd "Part One"
 
 # --- Part Two ---
+
+console group "Part Two"
 
 set corrupted [dict ()]
 set bytes [list ()]
@@ -121,6 +133,7 @@ list [string $input split "\n"] foreach coords {
     set bytes [list $bytes append ($coords)]
 }
 
+console time compute
 makeMaze
 set i [list $bytes length]
 while {[computeDistances] < 0} {
@@ -129,4 +142,7 @@ while {[computeDistances] < 0} {
     set corrupted [dict $corrupted remove $coords]
     makeMaze
 }
-get bytes # => result = 32,55
+console timeEnd compute
+console log "result =" $coords # => result = 32,55
+
+console groupEnd "Part Two"

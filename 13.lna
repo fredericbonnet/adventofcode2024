@@ -3,8 +3,11 @@ import node:fs (fs)
 import javascript:RegExp (RegExp)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
+import adventofcode2024 (floor)
 
 # --- Day 13: Claw Contraption ---
+
+console group "Part One"
 
 set example "Button A: X+94, Y+34
 Button B: X+22, Y+67
@@ -24,11 +27,8 @@ Prize: X=18641, Y=10279
 "
 set input [fs readFileSync adventofcode2024/13.input.txt [dict (encoding utf8)]]
 
-set r """Button A: X\+(\d+), Y\+(\d+)
-Button B: X\+(\d+), Y\+(\d+)
-Prize: X=(\d+), Y=(\d+)
-"""
-set re [RegExp new $r g]
+console time parse
+set re [RegExp new """Button A: X\+(\d+), Y\+(\d+)\nButton B: X\+(\d+), Y\+(\d+)\nPrize: X=(\d+), Y=(\d+)""" g]
 set machines [list ()]
 while true { 
     catch {
@@ -39,9 +39,9 @@ while true {
     set (_ ax ay bx by px py) [tuple $m]
     set machines [list $machines append ([dict (ax $ax ay $ay bx $bx by $by px $px py $py) ])]
 }
+console timeEnd parse
 
 macro isint {v} {catch {int $v; true} error _ {false}}
-macro floor {v} {idem $[string $v split .][0]}
 
 macro min {v1 v2} {[$v1 <= $v2] ? $v1 $v2}
 
@@ -54,6 +54,7 @@ proc getPushb {machine pusha} {
     return $pushbx
 }
 
+console time compute
 set totalwins 0
 set totalprice 0
 list $machines foreach machine {
@@ -78,11 +79,17 @@ list $machines foreach machine {
     set totalwins [$totalwins + [$win ? 1 0]]
     set totalprice [$totalprice + $minprice]
 }
+console timeEnd compute
 get totalwins # 159
-get totalprice # => result = 33427
+console log "result =" $totalprice # => result = 33427
+
+console groupEnd "Part One"
 
 # --- Part Two ---
 
+console group "Part Two"
+
+console time parse
 set machines [list ()]
 while true { 
     catch {
@@ -93,12 +100,12 @@ while true {
     set (_ ax ay bx by px py) [tuple $m]
     set machines [list $machines append ([dict (ax $ax ay $ay bx $bx by $by px [$px + 10000000000000] py [$py + 10000000000000]) ])]
 }
+console timeEnd parse
 
 proc toint {v} {
     set f [floor $v]
     if [[$v - $f] < 0.0001] {return $f}
-    set c [ceil $v]
-    if [[$f - $v + 1] < 0.0001] {return $c}
+    if [[$f + 1 - $v] < 0.0001] {return [$f + 1]}
     error "not an int"
 }
 
@@ -127,6 +134,7 @@ proc getPushes {machine} {
     }
 }
 
+console time compute
 set totalwins 0
 set totalprice 0
 list $machines foreach machine {
@@ -137,5 +145,8 @@ list $machines foreach machine {
         set totalprice [$totalprice + $price]
     }
 }
+console timeEnd compute
 get totalwins # 159
-get totalprice # => result = 33427
+console log "result =" $totalprice # => result = 91649162972270
+
+console groupEnd "Part Two"

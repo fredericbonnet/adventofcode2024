@@ -1,10 +1,14 @@
+import javascript:console (console)
 import node:fs (fs)
 
 # --- Day 9: Disk Fragmenter ---
 
+console group "Part One"
+
 set example "2333133121414131402"
 set input [fs readFileSync adventofcode2024/9.input.txt [dict (encoding utf8)]]
 
+console time parse
 set blocks [list ()]
 set free [list ()]
 set len [string $input length]
@@ -18,10 +22,10 @@ while {$i < $len} {
     set i [$i + 2]
     set id [$id + 1]
 }
+console timeEnd parse
 
 set origblocks $blocks
 set origfree $free
-
 
 proc defragBlock {blocks free ifree} {
     set nbFree [list $free length]
@@ -52,14 +56,6 @@ proc defragBlock {blocks free ifree} {
     while {&& {$ifree < [list $free length]} {$free[$ifree] == 0}} {set ifree [$ifree + 1]}
     return ($blocks $free $ifree)
 }
-
-set blocks $origblocks
-set free $origfree
-set ifree 0
-while {$ifree < [list $free length]} {
-    set (blocks free ifree) [defragBlock $blocks $free $ifree]
-}
-
 proc checksum {blocks} {
     set checksum 0
     set i 0
@@ -76,9 +72,22 @@ proc checksum {blocks} {
     }
     return $checksum
 }
-checksum $blocks # => result = 6349606724455
+
+console time compute
+set blocks $origblocks
+set free $origfree
+set ifree 0
+while {$ifree < [list $free length]} {
+    set (blocks free ifree) [defragBlock $blocks $free $ifree]
+}
+console timeEnd compute
+console log "result =" [checksum $blocks] # => result = 6349606724455
+
+console groupEnd "Part One"
 
 # --- Part Two ---
+
+console group "Part Two"
 
 proc defragFile {blocks free ifree ifile} {
     set (size id) $blocks[$ifile]
@@ -106,15 +115,6 @@ proc defragFile {blocks free ifree ifile} {
     return ($blocks $free $ifree true)
 }
 
-set blocks $origblocks
-set free $origfree
-set ifile [[list $blocks length] - 1]
-set ifree 0
-while {$ifile > 0} {
-    set (blocks free ifree success) [defragFile $blocks $free $ifree $ifile]
-    if [! $success] {set ifile [$ifile - 1]}
-}
-
 proc checksum2 {blocks free} {
     set checksum 0
     set i 0
@@ -131,4 +131,17 @@ proc checksum2 {blocks free} {
     }
     return $checksum
 }
-checksum2 $blocks $free # => result = 6376648986651
+
+console time compute
+set blocks $origblocks
+set free $origfree
+set ifile [[list $blocks length] - 1]
+set ifree 0
+while {$ifile > 0} {
+    set (blocks free ifree success) [defragFile $blocks $free $ifree $ifile]
+    if [! $success] {set ifile [$ifile - 1]}
+}
+console timeEnd compute
+console log "result =" [checksum2 $blocks $free] # => result = 6376648986651
+
+console groupEnd "Part Two"

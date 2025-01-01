@@ -1,11 +1,13 @@
+import javascript:console (console)
 import node:fs (fs)
 import javascript:RegExp (RegExp)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 import adventofcode2024 (pow2 floor xor mod)
-import javascript:console (console)
 
 # --- Day 17: Chronospatial Computer ---
+
+console group "Part One"
 
 set example "Register A: 729
 Register B: 0
@@ -16,13 +18,7 @@ Program: 0,1,5,4,3,0
 
 set input [fs readFileSync adventofcode2024/17.input.txt [dict (encoding utf8)]]
 
-set r """Register A: (\d+)
-Register B: (\d+)
-Register C: (\d+)
-
-Program: (.+)
-"""
-set re [RegExp new $r g]
+set re [RegExp new """Register A: (\d+)\nRegister B: (\d+)\nRegister C: (\d+)\n\nProgram: (.+)""" g]
 set m $[dict [RegExp exec $re $input]](matches)
 set (_ rega regb regc program) [tuple $m]
 set opcodes [string $program split ,]
@@ -80,17 +76,24 @@ proc run {opcodes rega regb regc} {
     }
     get out
 }
-run $opcodes $*registers # => result = 4,1,7,6,4,1,0,2,7
+console time compute
+set result [run $opcodes $*registers]
+console timeEnd compute
+console log "result =" $result # => result = 4,1,7,6,4,1,0,2,7
+
+console groupEnd "Part One"
 
 # --- Part Two ---
 
+console group "Part Two"
+
 # Brute force
-set rega 0
-while {true} {
-    if [[mod $rega 1000] == 0] {console log $rega}
-    if {string [run $opcodes $*registers] == $program} {break}
-    set rega [$rega + 1]
-}
+# set rega 0
+# while {true} {
+#     if [[mod $rega 1000] == 0] {console log $rega}
+#     if {string [run $opcodes $*registers] == $program} {break}
+#     set rega [$rega + 1]
+# }
 # => Impractical
 # Reverse engineer from the source
 # Example:
@@ -197,6 +200,7 @@ while {true} {
 # Find all 10-bit values whose loop outputs desired value
 # Shift 3 bits and test for next desired value
 
+console time compute
 set body [list $opcodes range 0 [[list $opcodes length] - 3]]
 set rega 0
 set candidates [list ()]
@@ -230,4 +234,7 @@ set min $candidates[0]
 list $candidates foreach c {
     if [$c < $min] {set min $c}
 }
-get min # => result = 164279024971453
+console timeEnd compute
+console log "result =" $min # => result = 164279024971453
+
+console groupEnd "Part Two"

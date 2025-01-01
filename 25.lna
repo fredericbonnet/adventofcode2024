@@ -1,8 +1,11 @@
+import javascript:console (console)
 import node:fs (fs)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
 # --- Day 25: Code Chronicle ---
+
+console group "Part One"
 
 set example "#####
 .####
@@ -49,6 +52,7 @@ set input $example
 
 set input [fs readFileSync adventofcode2024/25.input.txt [dict (encoding utf8)]]
 
+console time parse
 set locks [dict ()]
 set keys [dict ()]
 set i 0
@@ -105,7 +109,9 @@ dict $keys foreach (index heights) {
         set column [$column + 1]
     }
 }
+console timeEnd parse
 
+console time compute
 set nbpairs 0
 dict $locks foreach (_ heights) {
     set allkeys $keys
@@ -121,7 +127,10 @@ dict $locks foreach (_ heights) {
     }
     set nbpairs [$nbpairs + [dict $allkeys size]]
 }
-get nbpairs # => result = 3525
+console timeEnd compute
+console log "result =" $nbpairs # => result = 3525
+
+console groupEnd "Part One"
 
 # --- Part Two ---
 

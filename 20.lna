@@ -1,9 +1,12 @@
+import javascript:console (console)
 import node:fs (fs)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 [list] eval {import adventofcode2024 (sortInts)}
 
 # --- Day 20: Race Condition ---
+
+console group "Part One"
 
 set example "###############
 #...#...#.....#
@@ -27,7 +30,7 @@ set minsaved 50
 set input [fs readFileSync adventofcode2024/20.input.txt [dict (encoding utf8)]]
 set minsaved 100
 
-
+console time parse
 set walls [dict ()]
 macro wall {x y} {dict $walls has ${x},${y}}
 set y 0
@@ -43,6 +46,7 @@ while {$i < [string $input length]} {
     set (x i) ([$x + 1] [$i + 1])
 }
 set height $y
+console timeEnd parse
 
 # Use generic maze algorithm although we can assume there's no deadend and another algorithm would be faster
 #
@@ -82,6 +86,7 @@ macro makeMaze {} {
         set y [$y + 1]
     }
 }
+console time compute
 makeMaze
 
 # Now that we have the graph, find the shorted path between S and E
@@ -127,15 +132,20 @@ dict $walls foreach (pos) {
     }
 }
 set nb 0
-set min
 list [list $cheats sortInts] foreach cheat {
     if [$cheat >= $minsaved] {set nb [$nb + 1]}
 }
-get nb # => result = 1497
+console timeEnd compute
+console log "result =" $nb # => result = 1497
+
+console groupEnd "Part One"
 
 # --- Part Two ---
 
+console group "Part Two"
+
 # List all cheats = path tiles at a distance <= 20
+console time compute
 namespace cheats {
     set nb 0
     macro add {x y x2 y2 d} {
@@ -147,9 +157,8 @@ namespace cheats {
     macro nb {} {get nb}
 }
 set y 0
-import javascript:console (console)
 while {$y < $height} {
-    console log $y
+    console timeLog compute ${y}/$height
     set x 0
     while {$x < $width} {
         set d [getDistance ($x $y)]
@@ -191,4 +200,8 @@ while {$y < $height} {
     }
     set y [$y + 1]
 }
-cheats nb # => result = 1030809
+set result [cheats nb]
+console timeEnd compute
+console log "result =" $result # => result = 1030809
+
+console groupEnd "Part Two"
