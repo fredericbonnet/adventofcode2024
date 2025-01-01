@@ -1,0 +1,59 @@
+load adventofcode2024/adventofcode2024 adventofcode2024
+[list] eval {import adventofcode2024 (sortInts)}
+
+# --- Day 1: Historian Hysteria ---
+
+let example (
+    (3   4)
+    (4   3)
+    (2   5)
+    (1   3)
+    (3   9)
+    (3   3)
+)
+let input [source adventofcode2024/1.input.lna]
+set l1 ()
+set l2 ()
+list $input foreach (v1 v2) {
+    set l1 [list $l1 append ($v1)]
+    set l2 [list $l2 append ($v2)]
+}
+
+set l1 [list $l1 sortInts]
+set l2 [list $l2 sortInts]
+
+set i 0
+set distance 0
+while {$i < [list $l1 length]} {
+    set d [[list $l1 at $i] - [list $l2 at $i]]
+    set distance [$distance + [[$d > 0] ? $d [- $d]]]
+    set i [$i + 1]
+}
+get distance # => result = 1223326
+
+# --- Part Two ---
+
+set similarity 0
+set i1 0
+set i2 0
+while {&& {$i1 < [list $l1 length]} {$i2 < [list $l2 length]}} {
+    set v1 [list $l1 at $i1]
+    set v2 [list $l2 at $i2]
+    if [$v1 < $v2] {
+        set i1 [$i1 + 1]
+        continue
+    }
+    if [$v1 > $v2] {
+        set i2 [$i2 + 1]
+        continue
+    }
+    set nb 1
+    while {[$i2 + $nb] < [list $l2 length]} {
+        set v2 [list $l2 at [$i2 + $nb]]
+        if [$v1 != $v2] {break}
+        set nb [$nb + 1]
+    }
+    set similarity [$similarity + [$v1 * $nb]]
+    set i1 [$i1 + 1]
+}
+get similarity => # result = 21070419

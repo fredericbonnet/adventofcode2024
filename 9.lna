@@ -1,0 +1,134 @@
+import node:fs (fs)
+
+# --- Day 9: Disk Fragmenter ---
+
+set example "2333133121414131402"
+set input [fs readFileSync adventofcode2024/9.input.txt [dict (encoding utf8)]]
+
+set blocks [list ()]
+set free [list ()]
+set len [string $input length]
+set i 0
+set id 0
+while {$i < $len} {
+    set blocks [list $blocks append (($input[$i] $id))]
+    if [[$i + 1] < $len] {
+        set free [list $free append ($input[$i + 1])]
+    }
+    set i [$i + 2]
+    set id [$id + 1]
+}
+
+set origblocks $blocks
+set origfree $free
+
+
+proc defragBlock {blocks free ifree} {
+    set nbFree [list $free length]
+    while {&& {$ifree < $nbFree} {$free[$ifree] == 0}} {set ifree [$ifree + 1]}
+    if {$ifree >= [$nbFree - 1]} {
+        set free [list $free replace [$nbFree - 1] [$nbFree - 1] (0)]
+        return ($blocks $free $nbFree)
+    }
+    set nbBlocks [list $blocks length]
+    set (size id) $blocks[$nbBlocks - 1]
+    set freesize $free[$ifree]
+    if [$size <= $freesize] {
+        set blocks [list $blocks
+            |> list remove [$nbBlocks - 1] [$nbBlocks - 1]
+            |> list insert [$ifree + 1] (($size $id))
+        ]
+        set free [list $free 
+            |> list replace $ifree $ifree (0 [$free[$ifree] - $size])
+        ]
+    } else {
+        set blocks [list $blocks
+            |> list replace [$nbBlocks - 1] [$nbBlocks - 1] (([$size - $freesize] $id))
+            |> list insert [$ifree + 1] (($freesize $id))
+        ]
+        set free [list $free replace $ifree $ifree (0 0)]
+    }
+    set free [list $free range 0 [[list $blocks length] - 2]]
+    while {&& {$ifree < [list $free length]} {$free[$ifree] == 0}} {set ifree [$ifree + 1]}
+    return ($blocks $free $ifree)
+}
+
+set blocks $origblocks
+set free $origfree
+set ifree 0
+while {$ifree < [list $free length]} {
+    set (blocks free ifree) [defragBlock $blocks $free $ifree]
+}
+
+proc checksum {blocks} {
+    set checksum 0
+    set i 0
+    set pos 0
+    while {$i < [list $blocks length]} {
+        set (size id) $blocks[$i]
+        set j 0
+        while {$j < $size} {
+            set checksum [$checksum + $id * [$pos + $j]]
+            set j [$j + 1]
+        }
+        set i [$i + 1]
+        set pos [$pos + $size]
+    }
+    return $checksum
+}
+checksum $blocks # => result = 6349606724455
+
+# --- Part Two ---
+
+proc defragFile {blocks free ifree ifile} {
+    set (size id) $blocks[$ifile]
+    while {&& {$ifree < $ifile} {$free[$ifree] == 0}} {set ifree [$ifree + 1]}
+    set found $ifree
+    while {&& {$found < $ifile} {$free[$found] < $size}} {set found [$found + 1]}
+    if [$found >= $ifile] {return ($blocks $free $ifree false)}
+
+    set nbBlocks [list $blocks length]
+    set blocks [list $blocks
+        |> list remove [$ifile] [$ifile]
+        |> list insert [$found + 1] (($size $id))
+    ]
+    if [[$ifile - $found] == 1] {
+        set free [list $free 
+            |> list replace $found $ifile (0 [$free[$found] + $free[$ifile]])
+        ]
+    } else {
+        set free [list $free 
+            |> list replace [$ifile - 1] $ifile ([$free[$ifile - 1] + $size + [get free[$ifile] 0]])
+            |> list replace $found $found (0 [$free[$found] - $size])
+        ]
+    }
+    set free [list $free range 0 [[list $blocks length] - 2]]
+    return ($blocks $free $ifree true)
+}
+
+set blocks $origblocks
+set free $origfree
+set ifile [[list $blocks length] - 1]
+set ifree 0
+while {$ifile > 0} {
+    set (blocks free ifree success) [defragFile $blocks $free $ifree $ifile]
+    if [! $success] {set ifile [$ifile - 1]}
+}
+
+proc checksum2 {blocks free} {
+    set checksum 0
+    set i 0
+    set pos 0
+    while {$i < [list $blocks length]} {
+        set (size id) $blocks[$i]
+        set j 0
+        while {$j < $size} {
+            set checksum [$checksum + $id * [$pos + $j]]
+            set j [$j + 1]
+        }
+        set pos [$pos + $size + [get free[$i] 0]]
+        set i [$i + 1]
+    }
+    return $checksum
+}
+checksum2 $blocks $free # => result = 6376648986651

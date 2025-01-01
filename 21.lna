@@ -1,0 +1,354 @@
+import node:fs (fs)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 21: Keypad Conundrum ---
+
+# +---+---+---+
+# | 7 | 8 | 9 |
+# +---+---+---+
+# | 4 | 5 | 6 |
+# +---+---+---+
+# | 1 | 2 | 3 |
+# +---+---+---+
+#     | 0 | A |
+#     +---+---+
+#
+#     +---+---+
+#     | ^ | A |
+# +---+---+---+
+# | < | v | > |
+# +---+---+---+
+#
+# In summary, there are the following keypads:
+# 
+# - One directional keypad that you are using.
+# - Two directional keypads that robots are using.
+# - One numeric keypad (on a door) that a robot is using.
+
+
+set example "029A
+980A
+179A
+456A
+379A
+"
+
+set input $example
+
+set input [fs readFileSync adventofcode2024/21.input.txt [dict (encoding utf8)]]
+
+set codes [list ()]
+list [string $input split \n] foreach line {
+    if [string $line == ""] {break}
+    set codes [list $codes append ($line)]
+}
+
+proc repeat {s nb} {
+    set result ""
+    set i 0
+    while {$i < $nb} {
+        set result ${result}${s}
+        set i [$i + 1]
+    }
+    return $result
+}
+
+# The algorithms below try to sort the dir key sequences in reverse order of
+# distance from A so that the last one is closest to A and the distance between
+# two pairs is minimal. Not sure it's optimal but it seems to give the right
+# answer.
+
+proc numericTransition {from to} {
+    set coords [dict (
+        # +---+---+---+
+        # | 7 | 8 | 9 |
+        # +---+---+---+
+        # | 4 | 5 | 6 |
+        # +---+---+---+
+        # | 1 | 2 | 3 |
+        # +---+---+---+
+        #     | 0 | A |
+        #     +---+---+
+        7 (0 0) 8 (1 0) 9 (2 0)
+        4 (0 1) 5 (1 1) 6 (2 1)
+        1 (0 2) 2 (1 2) 3 (2 2)
+                0 (1 3) A (2 3)
+    )]
+    set (gapx gapy) (0 3)
+
+    set (x y) $coords($from)
+    set (x2 y2) $coords($to)
+
+    #     +---+---+
+    #     | ^ | A |
+    # +---+---+---+
+    # | < | v | > |
+    # +---+---+---+
+    set sequence ""
+    if {&& [$y == $gapy] [$x2 == $gapx]} {
+        set sequence ${sequence}$[repeat ^ [$y - $y2]]
+        if {$x2 < $x} {
+            set sequence ${sequence}$[repeat < [$x - $x2]]
+        } else {
+            set sequence ${sequence}$[repeat > [$x2 - $x]]
+        }
+    } elseif {$x2 < $x} {
+        set sequence ${sequence}$[repeat < [$x - $x2]]
+        if {$y2 < $y} {
+            set sequence ${sequence}$[repeat ^ [$y - $y2]]
+        } else {
+            set sequence ${sequence}$[repeat v [$y2 - $y]]
+        }
+    } else {
+        if {$y2 < $y} {
+            set sequence ${sequence}$[repeat ^ [$y - $y2]]
+        } else {
+            set sequence ${sequence}$[repeat v [$y2 - $y]]
+        }
+        set sequence ${sequence}$[repeat > [$x2 - $x]]
+    }
+    return $sequence
+}
+
+proc getNumericSequence {buttons} {
+    set sequence ""
+    set current A
+    list [string $buttons split ""] foreach button {
+        set sequence ${sequence}$[numericTransition $current $button]A
+        set current $button
+    }
+    return $sequence
+}
+
+proc directionalTransition {from to} {
+    set coords [dict (
+        #     +---+---+
+        #     | ^ | A |
+        # +---+---+---+
+        # | < | v | > |
+        # +---+---+---+
+                ^ (1 0) A (2 0)
+        < (0 1) v (1 1) > (2 1)
+    )]
+    set (gapx gapy) (0 0)
+
+    set (x y) $coords($from)
+    set (x2 y2) $coords($to)
+
+    #     +---+---+
+    #     | ^ | A |
+    # +---+---+---+
+    # | < | v | > |
+    # +---+---+---+
+    set sequence ""
+    if {&& [$y == $gapy] [$x2 == $gapx]} {
+        set sequence ${sequence}$[repeat v [$y2 - $y]]
+        if {$x2 < $x} {
+            set sequence ${sequence}$[repeat < [$x - $x2]]
+        } else {
+            set sequence ${sequence}$[repeat > [$x2 - $x]]
+        }
+    } elseif {$x2 < $x} {
+        set sequence ${sequence}$[repeat < [$x - $x2]]
+        if {$y2 < $y} {
+            set sequence ${sequence}$[repeat ^ [$y - $y2]]
+        } else {
+            set sequence ${sequence}$[repeat v [$y2 - $y]]
+        }
+    } else {
+        if {$y2 < $y} {
+            set sequence ${sequence}$[repeat ^ [$y - $y2]]
+        } else {
+            set sequence ${sequence}$[repeat v [$y2 - $y]]
+        }
+        set sequence ${sequence}$[repeat > [$x2 - $x]]
+    }
+    return $sequence
+}
+
+proc getDirectionalSequence {buttons} {
+    set sequence ""
+    set current A
+    list [string $buttons split ""] foreach button {
+        set sequence ${sequence}$[directionalTransition $current $button]A
+        set current $button
+    }
+    return $sequence
+}
+
+set complexity 0
+list $codes foreach buttons {
+    set numpart [string $buttons range 0 2]
+    set len [
+        getNumericSequence $buttons
+        |> getDirectionalSequence
+        |> getDirectionalSequence
+        |> string length
+    ]
+    set complexity [$complexity + $numpart * $len]
+}
+get complexity # => result = 177814
+
+# --- Part Two ---
+
+proc sequenceToPairs {buttons} {
+    set pairs [list ()]
+    set current A
+    list [string $buttons split ""] foreach button {
+        set pairs [list $pairs append (($current $button))]
+        set current $button
+    }
+    return $pairs
+}
+proc getDirectionalSequence {buttons} {
+    set sequence ""
+    list [sequenceToPairs $buttons] foreach (from to) {
+        set sequence ${sequence}$[directionalTransition $from $to]A
+    }
+    return $sequence
+}
+
+proc getDirectionalSequenceLength {buttons} {
+    set length 0
+    list [sequenceToPairs $buttons] foreach (from to) {
+        set length [$length + [string [directionalTransition $from $to] length] + 1]
+    }
+    return $length
+}
+
+namespace memo {
+    macro has {from to iterations} {exists ${from}:${to}:${iterations}}
+    macro store {from to iterations length} {set ${from}:${to}:${iterations} $length}
+    macro retrieve {from to iterations} {get ${from}:${to}:${iterations}}
+}
+proc getDirectionalSequenceLength2 {buttons iterations} {
+    if [$iterations == 1] {
+        return [getDirectionalSequenceLength $buttons]
+    }
+    set length 0
+    list [sequenceToPairs $buttons] foreach (from to) {
+        if [memo has $from $to $iterations] {
+            set length [$length + [memo retrieve $from $to $iterations]]
+        } else {
+            set transition $[directionalTransition $from $to]
+            set pairLength [getDirectionalSequenceLength2 ${transition}A [$iterations - 1]]
+            memo store $from $to $iterations $pairLength
+            set length [$length + $pairLength]
+        }
+    }
+    return $length
+}
+
+# First run give incorrect result so refactor transition functions a bit:
+proc numericTransition {from to} {
+    set coords [dict (
+        # +---+---+---+
+        # | 7 | 8 | 9 |
+        # +---+---+---+
+        # | 4 | 5 | 6 |
+        # +---+---+---+
+        # | 1 | 2 | 3 |
+        # +---+---+---+
+        #     | 0 | A |
+        #     +---+---+
+        7 (0 0) 8 (1 0) 9 (2 0)
+        4 (0 1) 5 (1 1) 6 (2 1)
+        1 (0 2) 2 (1 2) 3 (2 2)
+                0 (1 3) A (2 3)
+    )]
+    set (gapx gapy) (0 3)
+
+    set (x y) $coords($from)
+    set (x2 y2) $coords($to)
+
+    if {$x2 < $x} {
+        set xsequence [repeat < [$x - $x2]]
+    } else {
+        set xsequence [repeat > [$x2 - $x]]
+    }
+    if {$y2 < $y} {
+        set ysequence [repeat ^ [$y - $y2]]
+    } else {
+        set ysequence [repeat v [$y2 - $y]]
+    }
+
+    #     +---+---+
+    #     | ^ | A |
+    # +---+---+---+
+    # | < | v | > |
+    # +---+---+---+
+    if {&& [$y == $gapy] [$x2 == $gapx]} {
+        # Avoid gap
+        return ${ysequence}${xsequence}
+    } elseif {&& [$x == $gapx] [$y2 == $gapy]} {
+        # Avoid gap
+        return ${xsequence}${ysequence}
+    } elseif {$x2 < $x} {
+        # < is the most expensive in any case so hit it first
+        return ${xsequence}${ysequence}
+    } else {
+        # Either ^> or v> are of equal length at this level, however at next
+        # level the middle row is more expensive so better hit it first
+        return ${ysequence}${xsequence}
+    }
+}
+proc directionalTransition {from to} {
+    set coords [dict (
+        #     +---+---+
+        #     | ^ | A |
+        # +---+---+---+
+        # | < | v | > |
+        # +---+---+---+
+                ^ (1 0) A (2 0)
+        < (0 1) v (1 1) > (2 1)
+    )]
+    set (gapx gapy) (0 0)
+
+    set (x y) $coords($from)
+    set (x2 y2) $coords($to)
+
+    if {$x2 < $x} {
+        set xsequence [repeat < [$x - $x2]]
+    } else {
+        set xsequence [repeat > [$x2 - $x]]
+    }
+    if {$y2 < $y} {
+        set ysequence [repeat ^ [$y - $y2]]
+    } else {
+        set ysequence [repeat v [$y2 - $y]]
+    }
+
+    #     +---+---+
+    #     | ^ | A |
+    # +---+---+---+
+    # | < | v | > |
+    # +---+---+---+
+    if {&& [$y == $gapy] [$x2 == $gapx]} {
+        # Avoid gap
+        return ${ysequence}${xsequence}
+    } elseif {&& [$x == $gapx] [$y2 == $gapy]} {
+        # Avoid gap
+        return ${xsequence}${ysequence}
+    } elseif {$x2 < $x} {
+        # < is the most expensive in any case so hit it first
+        return ${xsequence}${ysequence}
+    } else {
+        # Either ^> or v> are of equal length at this level, however at next
+        # level the middle row is more expensive so better hit it first
+        return ${ysequence}${xsequence}
+    } else {
+        return (${xsequence}${ysequence} ${ysequence}${xsequence})
+    }
+}
+
+set complexity 0
+list $codes foreach buttons {
+    set numpart [string $buttons range 0 2]
+    set len [
+        getNumericSequence $buttons
+        |> getDirectionalSequenceLength2 25
+    ]
+    set complexity [$complexity + $numpart * $len]
+}
+get complexity # => result = 220493992841852

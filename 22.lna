@@ -1,0 +1,175 @@
+import node:fs (fs)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+import adventofcode2024 (xor mod floor)
+
+# --- Day 22: Monkey Market ---
+
+set example "1
+10
+100
+2024
+"
+
+set input [fs readFileSync adventofcode2024/22.input.txt [dict (encoding utf8)]]
+
+set secrets [list ()]
+list [string $input split \n] foreach line {
+    if [string $line == ""] {break}
+    set secrets [list $secrets append ($line)]
+}
+
+proc nextSecret {secret} {
+    # In particular, each buyer's secret number evolves into the next secret number
+    # in the sequence via the following process:
+    #
+    # - Calculate the result of multiplying the secret number by 64. Then, mix this
+    #   result into the secret number. Finally, prune the secret number.
+
+    # 123 * 64 = 7872
+    # mix 7872 123 => 7872 xor 123 = 7867
+    # prune 7867 = 7867
+
+    set secret [
+        $secret * 64
+        |> mix $secret
+        |> prune
+    ]
+    # - Calculate the result of dividing the secret number by 32. Round the result
+    #   down to the nearest integer. Then, mix this result into the secret number.
+    #   Finally, prune the secret number. 
+
+    # 7867 / 32 = 245.84375
+    # round 245.84375 = 246
+    # mix 246 7867 => 246 xor 7867 = 7757
+
+    set secret [
+        $secret / 32
+        |> floor
+        |> mix $secret
+        |> prune
+    ]
+    # - Calculate the result of multiplying the secret number by 2048. Then, mix
+    #   this result into the secret number. Finally, prune the secret number.
+
+    # 7757 * 2048 = 15886336
+    # mix 15886336 7757 = 15889997
+    # prune 15889997 = 15889997
+    set secret [
+        $secret * 2048
+        |> mix $secret
+        |> prune
+    ]
+}
+
+# Each step of the above process involves mixing and pruning:
+# 
+# - To mix a value into the secret number, calculate the bitwise XOR of the
+#   given value and the secret number. Then, the secret number becomes the
+#   result of that operation. (If the secret number is 42 and you were to mix 15
+#   into the secret number, the secret number would become 37.)
+macro mix {value secret} {xor $value $secret}
+
+# - To prune the secret number, calculate the value of the secret number modulo
+#   16777216. Then, the secret number becomes the result of that operation. (If
+#   the secret number is 100000000 and you were to prune the secret number, the
+#   secret number would become 16113920.)
+macro prune {secret} {mod $secret 16777216} # same as keeping the lowest 24 bits
+
+proc nthSecret {secret nb} {
+    set i 0
+    set s $secret
+    while {$i < $nb} {
+        set s [nextSecret $s]
+        set i [$i + 1]
+    }
+    get s
+}
+
+import javascript:console (console)
+set sum 0
+set i 0
+list $secrets foreach secret {
+    set i [$i + 1]
+    if [[mod $i 10] == 0] {console log $i}
+    set sum [$sum + [nthSecret $secret 2000]]
+}
+get sum # => result = 17960270302
+
+# --- Part Two ---
+
+macro price {secret} {mod $secret 10}
+
+# set example2 (1 2 3 2024)
+# set secrets $example2
+
+namespace memo {
+    namespace prices {
+        import adventofcode2024 (variables)
+        macro add {d1 d2 d3 d4 price} {
+            set ${d1}:${d2}:${d3}:${d4} [[get ${d1}:${d2}:${d3}:${d4} 0] + $price]
+        }
+        macro max {} {
+            set max 0
+            dict [variables] foreach (sequence) {
+                if [$$sequence > $max] {
+                    set max $$sequence
+                }
+            }
+            get max
+        }
+    }
+    macro has {buyer d1 d2 d3 d4} {
+        exists ${buyer}:${d1}:${d2}:${d3}:${d4}
+    }
+    macro store {buyer d1 d2 d3 d4 price} {
+        set ${buyer}:${d1}:${d2}:${d3}:${d4} price
+        prices add $d1 $d2 $d3 $d4 $price
+    }
+    macro retrieve {buyer d1 d2 d3 d4} {
+        get ${buyer}:${d1}:${d2}:${d3}:${d4}
+    }
+    macro maxPrice {} {prices max}
+}
+
+set buyer 0
+list $secrets foreach secret {
+    if [[mod $buyer 10] == 0] {console log $buyer}
+    set p1 [
+        set s $secret
+        |> price
+    ]
+    set p2 [
+        set s [nextSecret $s]
+        |> price
+    ]
+    set p3 [
+        set s [nextSecret $s]
+        |> price
+    ]
+    set p4 [
+        set s [nextSecret $s]
+        |> price
+    ]
+    set p5 [
+        set s [nextSecret $s]
+        |> price
+    ]
+    set (d1 d2 d3 d4) ([$p2 - $p1] [$p3 - $p2] [$p4 - $p3] [$p5 - $p4])
+    memo store $buyer $d1 $d2 $d3 $d4 $p5
+    set i 5
+    while {$i < 2000} {
+        set p [
+            set s [nextSecret $s]
+            |> price
+        ]
+        set (p1 p2 p3 p4 p5) $(p2 p3 p4 p5 p)
+        set (d1 d2 d3 d4) ($d2 $d3 $d4 [$p5 - $p4])
+        if [! [memo has $buyer $d1 $d2 $d3 $d4]] {
+            memo store $buyer $d1 $d2 $d3 $d4 $p5
+        }
+        set i [$i + 1]
+    }
+    set buyer [$buyer + 1]
+}
+memo maxPrice # => result = 2042

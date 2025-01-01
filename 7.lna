@@ -1,0 +1,71 @@
+import node:fs (fs)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 7: Bridge Repair ---
+
+set example "190: 10 19
+3267: 81 40 27
+83: 17 5
+156: 15 6
+7290: 6 8 6 15
+161011: 16 10 13
+192: 17 8 14
+21037: 9 7 18 13
+292: 11 6 16 20
+"
+set input [fs readFileSync adventofcode2024/7.input.txt [dict (encoding utf8)]]
+
+proc canBeTrue {(int expected) (int partial) (int operand) *rest} {
+    if [$expected < $partial] {return false}
+    if [[tuple $rest length] == 0] {
+        return [|| {
+            $expected == [$partial + $operand]
+        } {
+            $expected == [$partial * $operand]
+        }]
+    }
+    || {
+        canBeTrue $expected [$partial + $operand] $*rest
+    } {
+        canBeTrue $expected [$partial * $operand] $*rest
+    }
+}
+
+set calibrationResult 0
+list [string $input split \n] foreach line {
+    if [string $line == ""] {break}
+    set (result operands) [tuple [string $line split ": "]]
+    if [canBeTrue $result $*[tuple [string $operands split " "]]] {set calibrationResult [$calibrationResult + $result]}
+}
+get calibrationResult # => result = 66343330034722
+
+# --- Part Two ---
+
+proc canBeTrue3 {(int expected) (int partial) (int operand) *rest} {
+    if [$expected < $partial] {return false}
+    if [[tuple $rest length] == 0] {
+        return [|| {
+            $expected == [$partial + $operand]
+        } {
+            $expected == [$partial * $operand]
+        } {
+            $expected == ${partial}${operand}
+        }]
+    }
+    || {
+        canBeTrue3 $expected [$partial + $operand] $*rest
+    } {
+        canBeTrue3 $expected [$partial * $operand] $*rest
+    } {
+        canBeTrue3 $expected ${partial}${operand} $*rest
+    }
+}
+
+set calibrationResult3 0
+list [string $input split \n] foreach line {
+    if [string $line == ""] {break}
+    set (result operands) [tuple [string $line split ": "]]
+    if [canBeTrue3 $result 0 $*[tuple [string $operands split " "]]] {set calibrationResult3 [$calibrationResult3 + $result]}
+}
+get calibrationResult3 # => result = 637696070419031

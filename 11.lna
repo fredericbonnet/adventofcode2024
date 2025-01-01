@@ -1,0 +1,73 @@
+import javascript:console (console)
+
+# --- Day 11: Plutonian Pebbles ---
+
+set example [list (0 1 10 99 999)]
+set input [source adventofcode2024/11.input.lna]
+
+macro even {v} {catch {int [$v / 2]; true} error _ {false}}
+
+proc blink {stones} {
+    set newstones [list ()]
+    list $stones foreach stone {
+        set len [string $stone length]
+        set newstones [list $newstones append [when {
+            {$stone == 0} {list (1)}
+            {even $len} {list (
+                [int [string $stone range 0 [$len / 2 - 1]]]
+                [int [string $stone replace 0 [$len / 2 - 1] ""]]
+            )}
+            {list ([$stone * 2024])}
+        }]]
+    }
+}
+
+set stones $input
+set i 0
+while {$i < 25} {
+    set stones [blink $stones]
+    set i [$i + 1]
+    console log $i => [list $stones length]
+}
+list $stones length # => result = 186424
+
+# --- Part Two ---
+
+namespace store {
+    macro has {stone nb} {
+        exists ${stone}:${nb}
+    }
+    macro value {stone nb} {
+        get ${stone}:${nb}
+    }
+    macro add {stone nb len} {
+        set ${stone}:${nb} $len
+    }
+}
+
+proc stonelengths {stones nb} {
+    set len 0
+    list $stones foreach stone {
+        set len [$len + [stonelength $stone $nb]]
+    }
+    get len
+}
+closure stonelength {stone nb} {
+    if {[store has $stone $nb]} {
+        store value $stone $nb
+    } elseif {$nb == 0} {
+        store add $stone $nb 1
+    } else {
+        store add $stone $nb [stonelengths [blink ($stone)] [$nb - 1]]
+    }
+}
+
+set stones $input
+set i 0
+while {$i <= 25} {
+    console log ${i}/25
+    stonelengths $stones $i
+    set i [$i + 1]
+}
+stonelengths $stones 25 # => 186424
+stonelengths $stones 75 # => result = 219838428124832

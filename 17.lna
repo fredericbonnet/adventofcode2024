@@ -1,0 +1,233 @@
+import node:fs (fs)
+import javascript:RegExp (RegExp)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+import adventofcode2024 (pow2 floor xor mod)
+import javascript:console (console)
+
+# --- Day 17: Chronospatial Computer ---
+
+set example "Register A: 729
+Register B: 0
+Register C: 0
+
+Program: 0,1,5,4,3,0
+"
+
+set input [fs readFileSync adventofcode2024/17.input.txt [dict (encoding utf8)]]
+
+set r """Register A: (\d+)
+Register B: (\d+)
+Register C: (\d+)
+
+Program: (.+)
+"""
+set re [RegExp new $r g]
+set m $[dict [RegExp exec $re $input]](matches)
+set (_ rega regb regc program) [tuple $m]
+set opcodes [string $program split ,]
+set registers $(rega regb regc)
+
+proc run {opcodes rega regb regc} {
+    set pc 0
+    set out ""
+    while {$pc < [list $opcodes length]} {
+        set opcode $opcodes[$pc]
+        set operand $opcodes[$pc + 1]
+        set combo [when ($operand ==) {
+            0 {0}
+            1 {1}
+            2 {2}
+            3 {3}
+            4 {get rega}
+            5 {get regb}
+            6 {get regc}
+            7 {error "reserved"}
+        }]
+        when ($opcode ==) {
+            0 { # adv
+                set rega [floor [$rega / [pow2 $combo]]]
+            }
+            1 { # blx
+                set regb [xor $regb $operand]
+            }
+            2 { # bst
+                set regb [mod $combo 8]
+            }
+            3 { # jnz
+                if [$rega != 0] {
+                    set pc [$operand - 2]
+                }
+            }
+            4 { # bxc
+                set regb [xor $regb $regc]
+            }
+            5 { # out
+                if [string $out == ""] {
+                    set out [mod $combo 8]
+                } else {
+                    set out ${out},[mod $combo 8]
+                }
+            }
+            6 { # bdv
+                set regb [floor [$rega / [pow2 $combo]]]
+            }
+            7 { # cdv
+                set regc [floor [$rega / [pow2 $combo]]]
+            }
+        }
+        set pc [$pc + 2]
+    }
+    get out
+}
+run $opcodes $*registers # => result = 4,1,7,6,4,1,0,2,7
+
+# --- Part Two ---
+
+# Brute force
+set rega 0
+while {true} {
+    if [[mod $rega 1000] == 0] {console log $rega}
+    if {string [run $opcodes $*registers] == $program} {break}
+    set rega [$rega + 1]
+}
+# => Impractical
+# Reverse engineer from the source
+# Example:
+#   Register A: 2024
+#   Register B: 0
+#   Register C: 0
+#   
+#   Program: 0,3,5,4,3,0
+#
+#   0,3: A <= A / [pow2 $combo]
+#   5,4: out << A mod 8
+#   3,0: jump 0 if A != 0
+#
+# Running in reverse
+#   OUT         A       opcode
+#               0       HALT
+#               0       3,0: jump 0 if A != 0
+#   0           0       5,4: out << A mod 8
+#           xxxx0       0,3: A <= A / 8
+#           xxx03       3,0: jump 0 if A != 0
+#   3       xxx03       5,4: out << A mod 8
+#           xxx03       0,3: A <= A / 8
+#           xx03x       3,0: jump 0 if A != 0
+#   4       xx034       5,4: out << A mod 8
+
+# => 0345300 in octal
+
+# Input:
+#   Register A: 64854237
+#   Register B: 0
+#   Register C: 0
+#   
+#   Program: 2,4,1,1,7,5,1,5,4,0,5,5,0,3,3,0
+#
+#   0   2,4:    B <= A % 8
+#   2   1,1     B <= B xor 1
+#   4   7,5     C <= A / 2^B
+#   6   1,5     B <= B xor 5
+#   8   4,0     B <= B xor C
+#  10   5,5     out << B % 8
+#  12   0,3     A <= A / 8
+#  14   3,0     jnz 0 if A != 0
+#
+# Running in reverse
+#   OUT         A       B       C       PC  opcode
+#               0                       16  HALT
+#               0                       14  jnz 0 if A != 0
+#               0                       12  A <= A / 8
+#   0          0x   zzzz0               10  out << B % 8
+#              0x   zzzz0   zzzzz        8  B <= B xor C
+#              0x       z   zzzzz        6  B <= B xor 5
+#              0x       Y   zzzzz        4  C <= A / 2^B
+#                       Y = z xor 5
+#              0x       y       ?        2  B <= B xor 1
+#                       y = x xor 1
+#              0x       x       ?        0  B <= A % 8
+
+
+
+# Running in normal order
+#   OUT         A       B       C       PC  opcode
+#          xxxxxx       3                0  B <= A % 8
+#          xxxxxx       2                2  B <= B xor 1
+#          xxxxxx       2  zzzzz5        4  C <= A / 2^B
+#          xxxxxx       7  zzzzz5        6  B <= B xor 5
+#          xxxxxx  yyyyy2  zzzzz5        8  B <= B xor C
+#   2      xxxxxx  yyyyy2  zzzzzz       10  out << B % 8
+#          xxxxxx          zzzzzz       12  A <= A / 8
+#          xxxxxx          zzzzzz       14  jnz 0 if A != 0
+
+
+# A = abcdefghij (binary)
+# 0     2       4                       6       8           10
+# hij   hiJ                             Hij
+# 000   001     C=A>>1   abcdefghi      100      abcdefGhi  Ghi
+# 001   000     C=A     abcdefghij      101     abcdefgHiJ  HiJ
+# 010   011     C=A>>3     abcdefg      110        abcdEFg  EFg
+# 011   010     C=A>>2    abcdefgh      111       abcdeFGH  FGH
+# 100   101     C=A>>5       abcde      000          abcde  cde
+# 101   100     C=A>>4      abcdef      001         abcdeF  deF
+# 110   111     C=A>>7         abc      010            aBc  aBc
+# 111   110     C=A>>6        abcd      011           abCD  bCD
+
+# 2     010     cde=010 hij=100 | deF=010 def=011 hij=101 | aBc=010 abc=000 hij=110 | bCD=010 bcd=001 hij=111
+# 4     100     HiJ=100 hij=001 | EFg=100 efg=010 hij=010 | cde=100 hij=100 | deF=100 def=101 hij=101 | aBc=100 abc=110 hij=110 | bCD=100 bcd=111 hij=111
+#                       efg=001                   efg=010           efg=110                   efg=101                   efg=110                   efg=111
+# 1     001     EFg=001 efg=111 hij=010 | FGH=001 fgh=110 hij=011 | cde=001 hij=100 | deF=001 def=000 hij=101 | aBc=001 abc=011 hij=110 | bCD=001 bcd=010 hij=111
+#                               bcd=010                   bcd=011           bcd=100                   bcd=101                   bcd=110                   bcd=111
+# 1     001
+# 7     777
+# 5     101
+# 1     001
+# 5     101
+# 4     100
+# 0     000
+# 5     101
+# 5     101
+# 0     000
+# 3     011
+# 3     011
+# 0     000
+
+
+# Find all 10-bit values whose loop outputs desired value
+# Shift 3 bits and test for next desired value
+
+set body [list $opcodes range 0 [[list $opcodes length] - 3]]
+set rega 0
+set candidates [list ()]
+while {$rega < 1024} {
+    set output [run $body $rega 0 0]
+    if {$output == $opcodes[0]} {
+        set candidates [list $candidates append ($rega)]
+    }
+    set rega [$rega + 1]
+}
+set pc 1
+while {$pc < [list $opcodes length]} {
+    set prev $candidates
+    set candidates [list ()]
+    list $prev foreach candidate {
+        set magnitude [pow2 [$pc * 3]]
+        set base [floor [$candidate / $magnitude]]
+        set lead 0
+        while {$lead < 8} {
+            set rega [$base + $lead * 128]
+            set output [run $body $rega 0 0]
+            if {$output == $opcodes[$pc]} {
+                set candidates [list $candidates append ([$candidate + $lead * $magnitude * 128])]
+            }
+            set lead [$lead + 1]
+        }
+    }
+    set pc [$pc + 1]
+}
+set min $candidates[0]
+list $candidates foreach c {
+    if [$c < $min] {set min $c}
+}
+get min # => result = 164279024971453

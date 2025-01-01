@@ -1,0 +1,41 @@
+import node:fs (fs)
+import javascript:RegExp (RegExp)
+
+# --- Day 3: Mull It Over ---
+
+let input [fs readFileSync adventofcode2024/3.input.txt [dict (encoding utf8)]]
+
+set re [RegExp new """mul\((\d+),(\d+)\)""" g]
+set sum 0
+while true { 
+    catch {
+        set m $[dict [RegExp exec $re $input]](matches)
+        set sum [$sum + $m[1] * $m[2]]
+    } error _ {
+        break
+    }
+}
+get sum # => result = 180233229
+
+# --- Part Two ---
+
+set re [RegExp new """(?<mul>mul\((?<v1>\d+),(?<v2>\d+)\))|(?<do>do\(\))|(?<dont>don't\(\))""" g]
+set do true
+set sum 0
+while true {
+    catch {
+        set groups $[dict [RegExp exec $re $input]](groups)
+        if {dict $groups has mul} {
+            if $do {
+                set sum [$sum + $groups(v1) * $groups(v2)]
+            }
+        } elseif {dict $groups has do} {
+            set do true
+        } elseif {dict $groups has dont} {
+            set do false
+        }
+    } error _ {
+        break
+    }
+}
+get sum # => result = 95411583

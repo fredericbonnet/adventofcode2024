@@ -1,0 +1,132 @@
+import node:fs (fs)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 18: RAM Run ---
+
+set example "5,4
+4,2
+4,5
+3,0
+2,1
+6,3
+2,4
+1,5
+0,6
+3,3
+2,6
+5,1
+1,2
+5,5
+2,5
+6,5
+1,4
+0,4
+6,4
+1,1
+6,1
+1,0
+0,5
+1,6
+2,0
+"
+set input $example
+set size 6
+set max 12
+
+set input [fs readFileSync adventofcode2024/18.input.txt [dict (encoding utf8)]]
+set size 70
+set max 1024
+
+set corrupted [dict ()]
+macro corrupted {x y} {dict $corrupted has ${x},${y}}
+list [string $input split "\n"] foreach coords {
+    if [string $coords == ""] {break}
+    set corrupted [dict $corrupted add $coords true]
+    if [[dict $corrupted size] == $max] {break}
+}
+set start (0 0)
+set end ($size $size)
+
+# Maze = directed graph
+# Vertices = (x,y)
+
+macro makeMaze {} {
+    namespace maze {
+        macro coords {x y} {idem ${x},${y}}
+        macro add {v1 v2} {
+            set [coords $*v1] [list [next $v1] append ($v2)]
+        }
+        macro next {v} {get [coords $*v] ()}
+    }
+    set y 0
+    while {$y <= $size} {
+        set x 0
+        while {$x <= $size} {
+            if [corrupted $x $y] {
+                set x [$x + 1]
+                continue
+            }
+            if {! [corrupted [$x - 1] $y]} {
+                maze add ($x $y) ([$x - 1] $y)
+            }
+            if {! [corrupted [$x + 1] $y]} {
+                maze add ($x $y) ([$x + 1] $y)
+            }
+            if {! [corrupted $x [$y - 1]]} {
+                maze add ($x $y) ($x [$y - 1])
+            }
+            if {! [corrupted $x [$y + 1]]} {
+                maze add ($x $y) ($x [$y + 1])
+            }        
+            set x [$x + 1]
+        }
+        set y [$y + 1]
+    }
+}
+makeMaze
+
+# Now that we have the graph, find the shorted path between S and E
+macro getDistance {p} {dict $distances get [maze coords $*p] -1}
+macro setDistance {p distance} {set distances [dict $distances add [maze coords $*p] $distance]}
+
+macro computeDistances {} {
+    set distances [dict ()]
+    set current $start
+    setDistance $current 0
+    set nextNodes [list ($current)]
+    while {[list $nextNodes length] > 0} {
+        set current $nextNodes[0]
+        set nextNodes [list $nextNodes remove 0 0]
+        set distance [getDistance $current]
+        list [maze next $current] foreach next {
+            set nextDistance [getDistance $next]
+            if [|| {$nextDistance < 0} {$nextDistance > [$distance + 1]}] {
+                setDistance $next [$distance + 1]
+                set nextNodes [list $nextNodes append ($next)]
+            }
+        }
+    }
+    getDistance $end
+}
+computeDistances # => result = 248
+
+# --- Part Two ---
+
+set corrupted [dict ()]
+set bytes [list ()]
+list [string $input split "\n"] foreach coords {
+    if [string $coords == ""] {break}
+    set corrupted [dict $corrupted add $coords true]
+    set bytes [list $bytes append ($coords)]
+}
+
+makeMaze
+set i [list $bytes length]
+while {[computeDistances] < 0} {
+    set i [$i - 1]
+    set coords $bytes[$i]
+    set corrupted [dict $corrupted remove $coords]
+    makeMaze
+}
+get bytes # => result = 32,55

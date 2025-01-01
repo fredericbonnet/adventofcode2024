@@ -1,0 +1,99 @@
+import node:fs (fs)
+import javascript:RegExp (RegExp)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 14: Restroom Redoubt ---
+
+set example "p=0,4 v=3,-3
+p=6,3 v=-1,-3
+p=10,3 v=-1,2
+p=2,0 v=2,-1
+p=0,0 v=1,3
+p=3,0 v=-2,-2
+p=7,6 v=-1,-3
+p=3,0 v=-1,-2
+p=9,3 v=2,3
+p=7,3 v=-1,2
+p=2,4 v=2,-3
+p=9,5 v=-3,-3
+"
+set input $example
+set width 11
+set height 7
+
+set input [fs readFileSync adventofcode2024/14.input.txt [dict (encoding utf8)]]
+set width 101
+set height 103
+
+set r """p=(\d+),(\d+) v=(-?\d+),(-?\d+)\n"""
+set re [RegExp new $r g]
+set robots [list ()]
+while true { 
+    catch {
+        set m $[dict [RegExp exec $re $input]](matches)
+    } error _ {
+        break
+    }
+    set (_ px py vx vy) [tuple $m]
+    set robots [list $robots append ($(px py vx vy))]
+}
+
+macro floor {v} {idem $[string $v split .][0]}
+macro mod {v d} {$v - [[floor [$v / $d]] * $d]}
+
+proc wrap {v size} {
+    set v [mod $v $size]
+    [$v < 0] ? [$v + $size] $v
+}
+
+set midx [floor [$width / 2]]
+set midy [floor [$height / 2]]
+set (tl tr bl br) (0 0 0 0)
+set seconds 100
+list $robots foreach (px py vx vy) {
+    set (x y) ([wrap [$px + $vx * $seconds] $width] [wrap [$py + $vy * $seconds] $height])
+    if [&& [$x < $midx] [$y < $midy]] {set tl [$tl + 1]}
+    if [&& [$x > $midx] [$y < $midy]] {set tr [$tr + 1]}
+    if [&& [$x < $midx] [$y > $midy]] {set bl [$bl + 1]}
+    if [&& [$x > $midx] [$y > $midy]] {set br [$br + 1]}
+}
+* $*(tl tr bl br) # => result =
+
+# --- Part Two ---
+
+proc display {width height positions} {
+    set dots [dict ()]
+    list $positions foreach (x y) {
+        set dots [dict $dots add ${x},${y} true]
+    }
+    set y 0
+    set pic ""
+    while {$y < $height} {
+        set row ""
+        set x 0
+        while {$x < $width} {
+            if [dict $dots has ${x},${y}] {
+                set row "${row}X"
+            } else {
+                set row "${row} "
+            }
+            set x [$x + 1]
+        }
+        set pic "${pic}${row}\n"
+        set y [$y + 1]
+    }
+    return $pic
+}
+
+proc getPositions {robots width height seconds} {
+    set positions [list ()]
+    list $robots foreach (px py vx vy) {
+        set (x y) ([wrap [$px + $vx * $seconds] $width] [wrap [$py + $vy * $seconds] $height])
+        set positions [list $positions append ($(x y))]
+    }
+    get positions
+}
+
+# Iterate manually until you notice groups => 48
+# Iterate by steps = 101 => 7623

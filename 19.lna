@@ -1,0 +1,94 @@
+import node:fs (fs)
+import javascript:RegExp (RegExp)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 19: Linen Layout ---
+
+set example "r, wr, b, g, bwu, rb, gb, br
+
+brwrr
+bggr
+gbbr
+rrbgbr
+ubwu
+bwurrg
+brgr
+bbrgwb
+"
+
+set input $example
+
+set input [fs readFileSync adventofcode2024/19.input.txt [dict (encoding utf8)]]
+
+set (p d) [tuple [string $input split \n\n]]
+set patterns [string $p split ", "]
+
+set r ""
+list $patterns foreach p {
+    if [string $r == ""] {
+        set r $p
+    } else {
+        set r ${r}|$p
+    }
+}
+set re [RegExp new "^($r)+\$"]
+
+set nb 0
+list [string $d split \n] foreach design {
+    if [string $design == ""] {break}
+    set nb [$nb + [catch {dict [RegExp exec $re $design]; 1} error _ {0}]]
+}
+get nb # => result = 342
+
+# --- Part Two ---
+
+namespace memo {
+    macro has {pattern design} {
+        exists ${pattern}:${design}
+    }
+    macro retrieve {pattern design} {
+        get ${pattern}:${design}
+    }
+    macro store {pattern design nb} {
+        set ${pattern}:${design} $nb
+    }
+}
+proc matches {patterns design} {
+    set nb 0
+    set dl [string $design length]
+    list $patterns foreach pattern {
+        if [memo has $pattern $design] {
+            set nb [$nb + [memo retrieve $pattern $design]]
+            continue
+        }
+        if [string $pattern == $design] {
+            set nb [$nb + 1]
+            continue
+        }
+        set pl [string $pattern length]
+        if [$pl >= $dl] {continue}
+        set (prefix suffix) ([string $design range 0 [$pl - 1]] [string $design remove 0 [$pl - 1]])
+        if [string $pattern != $prefix] {continue}
+        set matches [matches $patterns $suffix]
+        memo store $pattern $design $matches
+        set nb [$nb + $matches]
+    }
+    return $nb
+}
+
+import javascript:console (console)
+import adventofcode2024 (mod)
+
+
+set nb 0
+set i 0
+list [string $d split \n] foreach design {
+    if [string $design == ""] {break}
+    if [catch {dict [RegExp exec $re $design]; true} error _ {false}] {
+        set nb [$nb + [matches $patterns $design]]
+    }
+    set i [$i + 1]
+    if [[mod $i 10] == 0] {console log $i $nb}
+}
+get nb # => result = 891192814474630

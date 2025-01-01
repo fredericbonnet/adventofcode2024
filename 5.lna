@@ -1,0 +1,90 @@
+import node:fs (fs)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 5: Print Queue ---
+
+set example "47|53
+97|13
+97|61
+97|47
+75|29
+61|13
+75|53
+29|13
+97|29
+53|29
+61|53
+97|53
+61|29
+47|13
+75|47
+97|75
+47|61
+75|61
+47|29
+75|13
+53|13
+
+75,47,61,53,29
+97,61,53,29,13
+75,29,13
+75,97,47,61,53
+61,13,29
+97,13,75,29,47
+"
+let input [fs readFileSync adventofcode2024/5.input.txt [dict (encoding utf8)]]
+
+set (rules updates) [tuple [string $input split \n\n]]
+set ruleset [dict ()]
+list [string $rules split \n] foreach rule {
+    set ruleset [dict $ruleset add $rule true]
+}
+
+proc getBrokenRule {pages ruleset} {
+    set len [list $pages length]
+    set i 0
+    while {$i < $len} {
+        set page1 $pages[$i]
+        set j [$i + 1]
+        while {$j < $len} {
+            set page2 $pages[$j]
+            if [dict $ruleset has ${page2}|${page1}] {return ($i $j)}
+            set j [$j + 1]
+        }
+        set i [$i + 1]
+    }
+    return (-1 -1)
+}
+
+set sum 0
+list [string $updates split \n] foreach line {
+    if [string "" == $line] {break}
+    set pages [string $line split ,]
+    set (i j) [getBrokenRule $pages $ruleset]
+    if [$i == -1] {
+        set sum [$sum + $pages[[[list $pages length] - 1] / 2]]
+    }
+}
+get sum # => result = 4924
+
+# --- Part Two ---
+
+proc swapPages {pages i j} {
+    list $pages
+    |> list replace $i $i ($pages[$j])
+    |> list replace $j $j ($pages[$i])
+}
+
+set sum 0
+list [string $updates split \n] foreach line {
+    if [string "" == $line] {break}
+    set pages [string $line split ,]
+    set (i j) [getBrokenRule $pages $ruleset]
+    if [$i == -1] {continue}
+    while {[set (i j) [getBrokenRule $pages $ruleset]; get i] != -1} {
+        set pages [swapPages $pages $i $j]
+    }
+    set sum [$sum + $pages[[[list $pages length] - 1] / 2]]
+}
+get sum # => result = 6085

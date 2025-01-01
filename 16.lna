@@ -1,0 +1,163 @@
+import node:fs (fs)
+
+# --- Day 16: Reindeer Maze ---
+
+set example "###############
+#.......#....E#
+#.#.###.#.###.#
+#.....#.#...#.#
+#.###.#####.#.#
+#.#.#.......#.#
+#.#.#####.###.#
+#...........#.#
+###.#.#####.#.#
+#...#.....#.#.#
+#.#.#.###.#.#.#
+#.....#...#.#.#
+#.###.#.#.#.#.#
+#S..#.....#...#
+###############
+"
+set example2 "#################
+#...#...#...#..E#
+#.#.#.#.#.#.#.#.#
+#.#.#.#...#...#.#
+#.#.#.#.###.#.#.#
+#...#.#.#.....#.#
+#.#.#.#.#.#####.#
+#.#...#.#.#.....#
+#.#.#####.#.###.#
+#.#.#.......#...#
+#.#.###.#####.###
+#.#.#...#.....#.#
+#.#.#.#####.###.#
+#.#.#.........#.#
+#.#.#.#########.#
+#S#.............#
+#################
+"
+set input $example2
+
+set input [fs readFileSync adventofcode2024/16.input.txt [dict (encoding utf8)]]
+
+set walls [dict ()]
+macro wall {x y} {dict $walls has ${x},${y}}
+set y 0
+set x 0
+set i 0
+while {$i < [string $input length]} {
+    when (string $input[$i] ==) {
+        \n  {set (x y i width) (0 [$y + 1] [$i + 1] $x); continue}
+        S   {set start $(x y)}
+        E   {set end $(x y)}
+        "#" {set walls [dict $walls add ${x},${y} true]}
+    }
+    set (x i) ([$x + 1] [$i + 1])
+}
+set height $y
+
+# Maze = weighted directed graph
+# Vertices = (x,y,o) where x,y = square coords and o = orientation nsew
+
+macro resetMaze {} {
+    namespace maze {
+        macro coords {x y o} {idem ${x},${y},${o}}
+        macro add {v1 v2 w} {
+            set [coords $*v1] [list [next $v1] append (($v2 $w))]
+        }
+        macro next {v} {get [coords $*v] ()}
+    }
+}
+
+resetMaze
+set y 0
+while {$y < $height} {
+    set x 0
+    while {$x < $width} {
+        if [wall $x $y] {
+            set x [$x + 1]
+            continue
+        }
+        if {! [wall [$x - 1] $y]} {
+            # Can move westward
+            maze add ($x $y w) ([$x - 1] $y w)    1 # West:  forward
+            maze add ($x $y n) ($x $y w)       1000 # North: rotate CCW
+            maze add ($x $y s) ($x $y w)       1000 # South: rotate CW
+        }
+        if {! [wall [$x + 1] $y]} {
+            # Can move eastward
+            maze add ($x $y e) ([$x + 1] $y e)    1 # East:  forward
+            maze add ($x $y n) ($x $y e)       1000 # North: rotate CW
+            maze add ($x $y s) ($x $y e)       1000 # South: rotate CCW
+        }
+        if {! [wall $x [$y - 1]]} {
+            # Can move northward
+            maze add ($x $y n) ($x [$y - 1] n)    1 # North: forward
+            maze add ($x $y e) ($x $y n)       1000 # East:  rotate CW
+            maze add ($x $y w) ($x $y n)       1000 # West:  rotate CCW
+        }
+        if {! [wall $x [$y + 1]]} {
+            # Can move southward
+            maze add ($x $y s) ($x [$y + 1] s)    1 # South: forward
+            maze add ($x $y e) ($x $y s)       1000 # East:  rotate CCW
+            maze add ($x $y w) ($x $y s)       1000 # West:  rotate CW
+        }        
+        set x [$x + 1]
+    }
+    set y [$y + 1]
+}
+
+# Now that we have the weighted graph, find the shorted weighted path between S and E
+macro getScore {p} {dict $scores get [maze coords $*p] -1}
+macro setScore {p score} {set scores [dict $scores add [maze coords $*p] $score]}
+
+set scores [dict ()]
+set current ($*start e)
+setScore $current 0
+set nextNodes [list (($current 0))]
+while {[list $nextNodes length] > 0} {
+    set (current) $nextNodes[0]
+    set nextNodes [list $nextNodes remove 0 0]
+    set score [getScore $current]
+    list [maze next $current] foreach (next w) {
+        set nextScore [getScore $next]
+        if [|| {$nextScore < 0} {$nextScore > [$score + $w]}] {
+            # Warning: suboptimal, as we don't use each vertex' min score but only oriented scores
+            setScore $next [$score + $w]
+            set nextNodes [list $nextNodes append (($next $w))]
+        }
+    }
+}
+set minScore +Infinity
+list (n s e w) foreach o {
+    set score [getScore ($*end $o)]
+    if [&& [$score > 0] [$score < $minScore]] {set minScore $score}
+}
+get minScore # => result = 122492
+
+# --- Part Two ---
+
+# Follow paths in reverse for every link whose weight matches score difference
+set previousNodes [list ()]
+list (n s e w) foreach o {
+    set score [getScore ($*end $o)]
+    if [$score == $minScore] {set previousNodes [list $previousNodes append ((($*end $o) $score))]}
+}
+set opposite [dict (n s s n e w w e)]
+set path [dict ()]
+while {[list $previousNodes length] > 0} {
+    set (current) $previousNodes[0]
+    set previousNodes [list $previousNodes remove 0 0]
+    set score [getScore $current]
+    set (x y o) $current
+    set path [dict $path add ${x},${y} true]
+    list [maze next ($x $y $opposite($o))] foreach (previous w) {
+        set (px py po) $previous
+        set next ($px $py $opposite($po)) 
+        set previousScore [getScore $next]
+        if [$score == [$previousScore + $w]] {
+            set previousNodes [list $previousNodes append (($next $w))]
+        }
+    }
+}
+dict $path size # => result = 520

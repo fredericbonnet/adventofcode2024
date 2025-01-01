@@ -1,0 +1,128 @@
+import node:fs (fs)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 25: Code Chronicle ---
+
+set example "#####
+.####
+.####
+.####
+.#.#.
+.#...
+.....
+
+#####
+##.##
+.#.##
+...##
+...#.
+...#.
+.....
+
+.....
+#....
+#....
+#...#
+#.#.#
+#.###
+#####
+
+.....
+.....
+#.#..
+###..
+###.#
+###.#
+#####
+
+.....
+.....
+.....
+#....
+#.#..
+#.#.#
+#####
+"
+
+set input $example
+
+set input [fs readFileSync adventofcode2024/25.input.txt [dict (encoding utf8)]]
+
+set locks [dict ()]
+set keys [dict ()]
+set i 0
+list [string $input split \n\n] foreach block {
+    set pattern [string $block split \n]
+    if [string $block[0] == "#"] {
+        # Lock
+        set heights [list ()]
+        set column 0
+        while {$column < 5} {
+            set row 0
+            while {$row <= 5} {
+                if [&& {string $pattern[$row][$column] == "#"} {string $pattern[$row + 1][$column] == "."}] {
+                    set heights [list $heights append ($row)]
+                    break
+                }
+                set row [$row + 1]
+            }
+            set column [$column + 1]
+        }
+        set locks [dict $locks add $i $heights]
+    } else {
+        # Key
+        set heights [list ()]
+        set column 0
+        while {$column < 5} {
+            set row 0
+            while {$row <= 5} {
+                if [&& {string $pattern[$row][$column] == "."} {string $pattern[$row + 1][$column] == "#"}] {
+                    set heights [list $heights append ([5 - $row])]
+                    break
+                }
+                set row [$row + 1]
+            }
+            set column [$column + 1]
+        }
+        set keys [dict $keys add $i $heights]
+    }
+    set i [$i + 1]
+}
+
+set keyheights [dict ()]
+dict $keys foreach (index heights) {
+    set column 0
+    while {$column < 5} {
+        get keyheights($column) ()
+        |> dict add $heights[$column] [
+            get keyheights($column $heights[$column]) ()
+            |> list append ($index)
+        ]
+        |> (dict $keyheights add $column)
+        |> (set keyheights)
+
+        set column [$column + 1]
+    }
+}
+
+set nbpairs 0
+dict $locks foreach (_ heights) {
+    set allkeys $keys
+    set column 0
+    list $heights foreach height {
+        # Remove all incompatible keys per column
+        set keyheight [5 - $height + 1]
+        while {$keyheight <= 5} {
+            set allkeys [dict $allkeys remove $*[tuple [get keyheights($column $keyheight) ()]]]
+            set keyheight [$keyheight + 1]
+        }
+        set column [$column + 1]
+    }
+    set nbpairs [$nbpairs + [dict $allkeys size]]
+}
+get nbpairs # => result = 3525
+
+# --- Part Two ---
+
+# Nothing to do, challenge is complete!

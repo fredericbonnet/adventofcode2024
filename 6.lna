@@ -1,0 +1,92 @@
+import javascript:console (console)
+import node:fs (fs)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 6: Guard Gallivant ---
+
+set example "....#.....
+.........#
+..........
+..#.......
+.......#..
+..........
+.#..^.....
+........#.
+#.........
+......#...
+"
+set input [fs readFileSync adventofcode2024/6.input.txt [dict (encoding utf8)]]
+set lines [string $input split \n]
+set height [[list $lines length] - 1] # discard last empty line
+set width [string $lines[0] length]
+
+set blocks [dict ()]
+set y 0
+while {$y < $height} {
+    set line $lines[$y]
+    set x 0
+    while {$x < $width} {
+        when (string $line[$x] ==) {
+            "#" {set blocks [dict $blocks add ${x},${y} true]}
+            "^" {set initialpos ($x $y)}
+        }
+        set x [$x + 1]
+    }
+    set y [$y + 1]
+}
+
+proc advance {width height blocks pos dir} {
+    set (x y) $pos
+    set (dx dy) $dir
+    while true {
+        set (x2 y2) ([$x + $dx] [$y + $dy])
+        if [|| [$x2 < 0] [$x2 >= $width] [$y2 < 0] [$y2 >= $height]] {return ((-1 -1) (0 0))}
+        if [dict $blocks has ${x2},${y2}] {
+            set (dx dy) ([- $dy] $dx)
+            continue
+        }
+        return (($x2 $y2) ($dx $dy))
+    }
+}
+
+set path [dict ()]
+set pos $initialpos
+set dir (0 -1)
+while true {
+    set (x y) $pos
+    if [$x == -1] {break}
+    set path [dict $path add ${x},${y} true]
+    set (pos dir) [advance $width $height $blocks $pos $dir]
+}
+dict $path size # => result = 4656
+
+# --- Part Two ---
+
+# Brute force by placing a block on each of the original path
+set nb [dict $path size]
+set i 0
+set nbObstructions 0
+dict $path foreach (blockpos) {
+    console log "[set i [$i + 1]]/$nb $blockpos"
+    set (x y) [tuple [string $blockpos split ,]]
+    set blocks2 [dict $blocks add ${x},${y} true]
+    
+    set pathdirs [dict ()]
+    set pos $initialpos
+    set dir (0 -1)
+    while true {
+        set (x y) $pos
+        if [$x == -1] {break}
+        set (dx dy) $dir
+        set k ${x},${y},${dx},${dy}
+        if [dict $pathdirs has $k] {
+            console log "\t found $blockpos"
+            set nbObstructions [$nbObstructions + 1]
+            break
+        }
+        set pathdirs [dict $pathdirs add $k true]
+        set (pos dir) [advance $width $height $blocks2 $pos $dir]
+    }
+}
+get nbObstructions # => result =

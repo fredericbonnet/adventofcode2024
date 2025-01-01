@@ -1,0 +1,96 @@
+import node:fs (fs)
+import javascript:RegExp (RegExp)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 8: Resonant Collinearity ---
+
+set example "............
+........0...
+.....0......
+.......0....
+....0.......
+......A.....
+............
+............
+........A...
+.........A..
+............
+............
+"
+set input [fs readFileSync adventofcode2024/8.input.txt [dict (encoding utf8)]]
+
+set re [RegExp new {[0-9A-Za-z]}]
+set antennas [dict ()]
+set y 0
+list [string $input split \n] foreach line {
+    if [string $line == ""] {break}
+    set x 0
+    list [string $line split ""] foreach c {
+        if [RegExp test $re $c] {
+            set antennas [dict $antennas add $c [list [get antennas($c) ()] append (${x},${y})]]
+        }
+        set x [$x + 1]
+    }
+    set y [$y + 1]
+}
+set width $x
+set height $y
+
+set antinodes [dict ()]
+dict $antennas foreach (_ v) {
+    set positions $v
+    list $positions foreach p1 {
+        set (x1 y1) [tuple [string $p1 split ,]]
+        list $positions foreach p2 {
+            set (x2 y2) [tuple [string $p2 split ,]]
+            if [&& {$x1 == $x2} {$y1 == $y2}] {continue}
+            set (dx dy) ([$x2 - $x1] [$y2 - $y1])
+            set (x3 y3) ([$x2 + $dx] [$y2 + $dy])
+            if [&& {$x3 >= 0} {$x3 < $width} {$y3 >= 0} {$y3 < $height}] {
+                set antinodes [dict $antinodes add ${x3},${y3} true]
+            }
+        }
+    }
+}
+dict $antinodes size # => result = 398
+
+# --- Part Two ---
+
+set antinodes [dict ()]
+dict $antennas foreach (_ v) {
+    set positions $v
+    list $positions foreach p1 {
+        set (x1 y1) [tuple [string $p1 split ,]]
+        list $positions foreach p2 {
+            set (x2 y2) [tuple [string $p2 split ,]]
+            if [&& {$x1 == $x2} {$y1 == $y2}] {continue}
+            set (dx dy) ([$x2 - $x1] [$y2 - $y1])
+            set (x3 y3) ($x2 $y2)
+            while {&& {$x3 >= 0} {$x3 < $width} {$y3 >= 0} {$y3 < $height}} {
+                set antinodes [dict $antinodes add ${x3},${y3} true]
+                set (x3 y3) ([$x3 + $dx] [$y3 + $dy])
+            }
+        }
+    }
+}
+dict $antinodes size # => result = 1333
+
+proc dump {width height antinodes} {
+    import javascript:console (console)
+    set y 0
+    while {$y < $height} {
+        set line ""
+        set x 0
+        while {$x < $width} {
+            if [dict $antinodes has ${x},${y}] {
+                set line ${line}#
+            } else {
+                set line ${line}.
+            }
+            set x [$x + 1]
+        }
+        console log $line
+        set y [$y + 1]
+    }
+}

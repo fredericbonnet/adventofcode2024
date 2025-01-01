@@ -1,0 +1,141 @@
+import javascript:console (console)
+import node:fs (fs)
+import javascript:RegExp (RegExp)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 13: Claw Contraption ---
+
+set example "Button A: X+94, Y+34
+Button B: X+22, Y+67
+Prize: X=8400, Y=5400
+
+Button A: X+26, Y+66
+Button B: X+67, Y+21
+Prize: X=12748, Y=12176
+
+Button A: X+17, Y+86
+Button B: X+84, Y+37
+Prize: X=7870, Y=6450
+
+Button A: X+69, Y+23
+Button B: X+27, Y+71
+Prize: X=18641, Y=10279
+"
+set input [fs readFileSync adventofcode2024/13.input.txt [dict (encoding utf8)]]
+
+set r """Button A: X\+(\d+), Y\+(\d+)
+Button B: X\+(\d+), Y\+(\d+)
+Prize: X=(\d+), Y=(\d+)
+"""
+set re [RegExp new $r g]
+set machines [list ()]
+while true { 
+    catch {
+        set m $[dict [RegExp exec $re $input]](matches)
+    } error _ {
+        break
+    }
+    set (_ ax ay bx by px py) [tuple $m]
+    set machines [list $machines append ([dict (ax $ax ay $ay bx $bx by $by px $px py $py) ])]
+}
+
+macro isint {v} {catch {int $v; true} error _ {false}}
+macro floor {v} {idem $[string $v split .][0]}
+
+macro min {v1 v2} {[$v1 <= $v2] ? $v1 $v2}
+
+proc getPushb {machine pusha} {
+    set (ax ay) ([$machine(ax) * $pusha] [$machine(ay) * $pusha])
+    set (dx dy) ([$machine(px) - $ax] [$machine(py) - $ay])
+    if [|| [$dx < 0] [$dy < 0]] {return -1}
+    set (pushbx pushby) ([$dx / $machine(bx)] [$dy / $machine(by)])
+    if [|| [! [isint $pushbx]] [$pushbx != $pushby]] {return -1}
+    return $pushbx
+}
+
+set totalwins 0
+set totalprice 0
+list $machines foreach machine {
+    set maxa [min [$machine(px) / $machine(ax)] [$machine(py) / $machine(ay)]]
+    # Brute forcing is OK given the problem size
+    set win false
+    set minprice 0
+    set pusha 0
+    while {&& [$pusha <= $maxa] [$pusha <= 100]} {
+        set pushb [getPushb $machine $pusha]
+        if [&& [$pushb >= 0] [$pushb <= 100]] {
+            set price [$pusha * 3 + $pushb]
+            if [$win] {
+                set minprice [min [$minprice $price]]
+            } else {
+                set win true
+                set minprice $price
+            }
+        }
+        set pusha [$pusha + 1]
+    }
+    set totalwins [$totalwins + [$win ? 1 0]]
+    set totalprice [$totalprice + $minprice]
+}
+get totalwins # 159
+get totalprice # => result = 33427
+
+# --- Part Two ---
+
+set machines [list ()]
+while true { 
+    catch {
+        set m $[dict [RegExp exec $re $input]](matches)
+    } error _ {
+        break
+    }
+    set (_ ax ay bx by px py) [tuple $m]
+    set machines [list $machines append ([dict (ax $ax ay $ay bx $bx by $by px [$px + 10000000000000] py [$py + 10000000000000]) ])]
+}
+
+proc toint {v} {
+    set f [floor $v]
+    if [[$v - $f] < 0.0001] {return $f}
+    set c [ceil $v]
+    if [[$f - $v + 1] < 0.0001] {return $c}
+    error "not an int"
+}
+
+proc getPushes {machine} {
+    # Compute intersection of two straight lines
+    # A: origin=(0 0), vector=(ax ay): 
+    #   y = x * (ay/ax)
+    # B: origin=(px py), vector=(bx by): 
+    #   y = (x - px) * (by/bx) + py
+    #
+    #   x * (ay/ax) = (x - px) * (by/bx) + py
+    #   x * (ay/ax) = x * (by/bx) - px * (by/bx) + py
+    #   x * (ay/ax) - x * (by/bx) = - px * (by/bx) + py
+    #   x * (ay/ax  - by/bx) = - px * (by/bx) + py
+    #   x = (- px * (by/bx) + py) / (ay/ax  - by/bx)
+    set x [[[- $machine(px)] * [$machine(by) / $machine(bx)] + $machine(py)] / [$machine(ay) / $machine(ax) - $machine(by) / $machine(bx)]]
+    catch {
+        set nba [toint [$x / $machine(ax)]]
+        set nbb [toint [[$machine(px) - $x] / $machine(bx)]]
+        if [&& [$machine(px) == [$machine(ax) * $nba + $machine(bx) * $nbb]] [$machine(py) == [$machine(ay) * $nba + $machine(by) * $nbb]]] {
+            return ($nba $nbb)
+        }
+        return (-1 -1)
+    } error _ {
+        return (-1 -1)
+    }
+}
+
+set totalwins 0
+set totalprice 0
+list $machines foreach machine {
+    set (pusha pushb) [getPushes $machine]
+    if [$pusha >= 0] {
+        set totalwins [$totalwins + 1]
+        set price [$pusha * 3 + $pushb]
+        set totalprice [$totalprice + $price]
+    }
+}
+get totalwins # 159
+get totalprice # => result = 33427

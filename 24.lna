@@ -1,0 +1,286 @@
+import node:fs (fs)
+load adventofcode2024/adventofcode2024 adventofcode2024
+import adventofcode2024 (xor pow2)
+[string] eval {import adventofcode2024 ((splitString split))}
+[list] eval {import adventofcode2024 (sortStrings)}
+
+# --- Day 24: Crossed Wires ---
+
+set example "x00: 1
+x01: 0
+x02: 1
+x03: 1
+x04: 0
+y00: 1
+y01: 1
+y02: 1
+y03: 1
+y04: 1
+
+ntg XOR fgs -> mjb
+y02 OR x01 -> tnw
+kwq OR kpj -> z05
+x00 OR x03 -> fst
+tgd XOR rvg -> z01
+vdt OR tnw -> bfw
+bfw AND frj -> z10
+ffh OR nrd -> bqk
+y00 AND y03 -> djm
+y03 OR y00 -> psh
+bqk OR frj -> z08
+tnw OR fst -> frj
+gnj AND tgd -> z11
+bfw XOR mjb -> z00
+x03 OR x00 -> vdt
+gnj AND wpb -> z02
+x04 AND y00 -> kjc
+djm OR pbm -> qhw
+nrd AND vdt -> hwm
+kjc AND fst -> rvg
+y04 OR y02 -> fgs
+y01 AND x02 -> pbm
+ntg OR kjc -> kwq
+psh XOR fgs -> tgd
+qhw XOR tgd -> z09
+pbm OR djm -> kpj
+x03 XOR y03 -> ffh
+x00 XOR y04 -> ntg
+bfw OR bqk -> z06
+nrd XOR fgs -> wpb
+frj XOR qhw -> z04
+bqk OR frj -> z07
+y03 OR x01 -> nrd
+hwm AND bqk -> z03
+tgd XOR rvg -> z12
+tnw OR pbm -> gnj
+"
+set input $example
+
+set input [fs readFileSync adventofcode2024/24.input.txt [dict (encoding utf8)]]
+
+set (section1 section2) [tuple [string $input split \n\n]]
+set wires [dict ()]
+list [string $section1 split \n] foreach line {
+    if [string $line == ""] {break}
+    set wires [dict $wires merge [string $line split ": "]]
+}
+set connections [list ()]
+list [string $section2 split \n] foreach line {
+    if [string $line == ""] {break}
+    set (input1 gate input2 _ output) [tuple [string $line split " "]]
+    set connections [list $connections append ($(input1 gate input2 output))]
+}
+
+macro AND {op1 op2} {[&& [$op1 == 1] [$op2 == 1]] ? 1 0}
+macro OR {op1 op2} {[|| [$op1 == 1] [$op2 == 1]] ? 1 0}
+macro XOR {op1 op2} {xor $op1 $op2}
+
+set initialwires $wires
+
+set waiting $connections
+while {[list $waiting length] > 0} {
+    set active $waiting
+    set waiting [list ()]
+    list $active foreach (input1 gate input2 output) {
+        if {&& [dict $wires has $input1] [dict $wires has $input2]} {
+            set wires [dict $wires add $output [$gate $wires($input1) $wires($input2)]]
+        } else {
+            set waiting [list $waiting append ($(input1 gate input2 output))]
+        }
+    }
+    if [[list $active length] == [list $waiting length]] {break}
+}
+set number 0
+dict $wires foreach (name value) {
+    if {&& [string $name[0] == z] [$value == 1]} {
+        set index $name[1]$name[2]
+        set number [$number + [pow2 $index]]
+    }
+}
+get number # => result = 52038112429798
+
+# --- Part Two ---
+
+# I really don't want to find a programmatic solution here (I'm a bit tired of combinatory logic TBH), so I'll study the input carefully instead
+
+# Assumption: all initial input wires are either x or y
+dict $initialwires foreach (wire) {
+    when (string $wire[0] ==) {x {} y {} {error "initial wire neither x nor y"}}
+}
+# Assumption: all wire indexes are between 0 and max bits with no gap
+set maxbits [[dict $initialwires size] / 2]
+dict $initialwires foreach (wire) {
+    set index [string $wire range 1 2]
+    if [$index >= $maxbits] {error "wire index out of range"}
+}
+# Assumption: all connections between x and y occur for the same index
+list $connections foreach (input1 gate input2 output) {
+    if [|| [&& [string $input1[0] != x] [string $input1[0] != y]] [&& [string $input2[0] != x] [string $input2[0] != y]]] {continue}
+    if [string [string $input1 range 1 2] != [string $input2 range 1 2]] {error "mismatched wires"}
+}
+
+# Now we want to find connections that don't fit in a ripple-carry adder
+# Each half-adder A+B has a sum S = A XOR B and a carry C = A AND B
+# A full adder A+B + Cin has Sin = (A XOR B), Sout = Sin XOR Cin, Cout = (Sin AND Cin) OR (A AND Cin)
+
+# Apply wire aliasing such as described here: https://www.reddit.com/r/adventofcode/comments/1hnb969/2024_day_24_part_2_aliasing_wires_to_spot_the/
+
+# Initial pass
+set aliases [dict ()]
+list $connections foreach (input1 gate input2 output) {
+    if [|| [&& [string $input1[0] != x] [string $input1[0] != y]] [&& [string $input2[0] != x] [string $input2[0] != y]]] {continue}
+    set index [string $input1 range 1 2]
+    set alias $output
+    when (string $gate ==) {
+        AND {
+            if {$index == 0} {
+                set alias CARRY$index
+            } else {
+                set alias AND$index
+            }
+        }
+        XOR {set alias XOR$index}
+    }
+    if [string $alias != $output] {
+        set aliases [dict $aliases add $output $alias]
+    }
+}
+set aliased ""
+list $connections foreach (input1 gate input2 output) {
+    set (i1 i2) [tuple [list $(input1 input2) sortStrings]]
+    set aliased "${aliased}$[get aliases($i1) $i1] $gate [get aliases($i2) $i2] -> [get aliases($output) $output]\n"
+}
+fs writeFileSync adventofcode2024/24.aliased.txt $aliased [dict (encoding utf8)]
+
+# Further passes
+macro substitute {} {
+    set aliasedconnections [list ()]
+    list [string $aliased split \n] foreach line {
+        if [string $line == ""] {break}
+        set (input1 gate input2 _ output) [tuple [string $line split " "]]
+        set aliasedconnections [list $aliasedconnections append ($(input1 gate input2 output))]
+    }
+    list $aliasedconnections foreach (input1 gate input2 output) {
+        set (name1 index1) ([string $input1 range 0 [[string $input1 length] - 3]] [string $input1 remove 0 [[string $input1 length] - 3]])
+        set (name2 index2) ([string $input2 range 0 [[string $input2 length] - 3]] [string $input2 remove 0 [[string $input2 length] - 3]])
+        set alias $output
+        when (string $gate ==) {
+            AND {
+                if {&& {string $name1 == XOR} {string $name2 == CARRY} {$index2 == [$index1 - 1]}} {
+                    set alias CARRY_INTERMEDIATE$index1
+                } elseif {&& {string $name2 == XOR} {string $name1 == CARRY} {$index1 == [$index2 - 1]}} {
+                    set alias CARRY_INTERMEDIATE$index2
+                }
+            }
+            OR {
+                if {&& {string $name1 == AND} {string $name2 == CARRY_INTERMEDIATE} {$index1 == $index2}} {
+                    set alias CARRY$index1
+                } elseif {&& {string $name2 == AND} {string $name1 == CARRY_INTERMEDIATE} {$index1 == $index2}} {
+                    set alias CARRY$index1
+                }
+            }
+        }
+        if [string $alias != $output] {
+            set aliases [dict $aliases add $output $alias]
+        }
+    }
+    set aliasedlines [list ()]
+    list $aliasedconnections foreach (input1 gate input2 output) {
+        set (i1 i2) [tuple [list $(input1 input2) sortStrings]]
+        set aliasedlines [list $aliasedlines append ("[get aliases($i1) $i1] $gate [get aliases($i2) $i2] -> [get aliases($output) $output]")]
+    }
+    set aliased ""
+    list [list $aliasedlines sortStrings] foreach line {
+        set aliased ${aliased}${line}\n
+    }
+    fs writeFileSync adventofcode2024/24.aliased.txt $aliased [dict (encoding utf8)]
+}
+while true {
+    set nbaliases [dict $aliases size]
+    substitute
+    if [[dict $aliases size] == $nbaliases] {break}
+}
+
+# Missing:
+# AND12 OR CARRY_INTERMEDIATE12 -> CARRY12
+# we have:
+# CARRY_INTERMEDIATE12 OR kwb -> vjq
+# we should have:
+# AND12 OR CARRY_INTERMEDIATE12 -> CARRY12
+# thus: 
+# we have: CARRY11 XOR XOR12 -> kwb
+# we should have:
+# CARRY11 XOR XOR12 -> z12
+# hence swap kwb <-> z12
+
+# ggr XOR hnd -> kwb    ->      ggr XOR hnd -> z12
+# x12 AND y12 -> z12    ->      x12 AND y12 -> kwb
+
+set input [fs readFileSync adventofcode2024/24.fixed.txt [dict (encoding utf8)]]
+
+set (section1 section2) [tuple [string $input split \n\n]]
+set wires [dict ()]
+list [string $section1 split \n] foreach line {
+    if [string $line == ""] {break}
+    set wires [dict $wires merge [string $line split ": "]]
+}
+set connections [list ()]
+list [string $section2 split \n] foreach line {
+    if [string $line == ""] {break}
+    set (input1 gate input2 _ output) [tuple [string $line split " "]]
+    set connections [list $connections append ($(input1 gate input2 output))]
+}
+
+set initialwires $wires
+
+# Missing:
+# AND16 OR CARRY_INTERMEDIATE16 -> CARRY16
+# we have:
+# AND16 OR qkf -> cqs
+# CARRY15 XOR XOR16 -> qkf
+# we should have:
+# CARRY15 XOR XOR16 -> z16
+# hence swap qkf <-> z16
+#
+# gkw XOR cmc -> qkf    ->      gkw XOR cmc -> z16
+# gkw AND cmc -> z16    ->      gkw AND cmc -> qkf
+
+
+# Missing:
+# CARRY23 XOR XOR24 -> z24
+# we have:
+# CARRY23 XOR XOR24 -> tgr
+# hence swap tgr <-> z24
+#
+# ttg XOR stj -> tgr    ->      ttg XOR stj -> z24
+# vhm OR wwd -> z24     ->      vhm OR wwd -> tgr
+
+
+# Missing:
+# AND29 OR CARRY_INTERMEDIATE29 -> CARRY29
+# CARRY28 AND XOR29 -> CARRY_INTERMEDIATE29
+# we have:
+# AND28 OR CARRY_INTERMEDIATE28 -> CARRY28
+# AND29 AND CARRY28 -> ffr
+# AND29 XOR CARRY28 -> z29
+# XOR29 OR ffr -> psc
+# we should have:
+# CARRY28 AND XOR29 -> CARRY_INTERMEDIATE29
+# CARRY28 XOR XOR29 -> z29
+# hence swap AND29 and XOR29
+# we have:
+# x29 AND y29 -> AND29      x29 AND y29 -> jqn
+# x29 XOR y29 -> XOR29      x29 XOR y29 -> cph
+# hence swap jqn <-> cph
+#
+# x29 AND y29 -> jqn    ->      x29 AND y29 -> cph
+# x29 XOR y29 -> cph    ->      x29 XOR y29 -> jqn
+
+
+# All swaps:
+# kwb <-> z12
+# qkf <-> z16
+# tgr <-> z24
+# jqn <-> cph
+#
+# => result = cph,jqn,kwb,qkf,tgr,z12,z16,z24

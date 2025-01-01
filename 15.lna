@@ -1,0 +1,201 @@
+import node:fs (fs)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 15: Warehouse Woes ---
+
+set example "##########
+#..O..O.O#
+#......O.#
+#.OO..O.O#
+#..O@..O.#
+#O#..O...#
+#O..O..O.#
+#.OO.O.OO#
+#....O...#
+##########
+
+<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^
+vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v
+><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<
+<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^
+^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><
+^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^
+>^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^
+<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>
+^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>
+v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^
+"
+
+set example2 "########
+#..O.O.#
+##@.O..#
+#...O..#
+#.#.O..#
+#...O..#
+#......#
+########
+
+<^^>>>vv<v>>v<<"
+
+set input [fs readFileSync adventofcode2024/15.input.txt [dict (encoding utf8)]]
+
+set (warehouse movements) [tuple [string $input split \n\n]]
+
+set walls [dict ()]
+set boxes [dict ()]
+set y 0
+set x 0
+set i 0
+while {$i < [string $warehouse length]} {
+    when (string $warehouse[$i] ==) {
+        \n  {set (x y i) (0 [$y + 1] [$i + 1]); continue}
+        @   {set pos $(x y)}
+        "#" {set walls [dict $walls add ${x},${y} true]}
+        O   {set boxes [dict $boxes add ${x},${y} true]}
+    }
+    set (x i) ([$x + 1] [$i + 1])
+}
+set (origwalls origboxes origpos) $(walls boxes pos)
+
+
+macro move {x y dx dy} {
+    if {
+        if {dict $walls has [$x + $dx],[$y + $dy]} {
+            false
+        } elseif {dict $boxes has [$x + $dx],[$y + $dy]} {
+            move [$x + $dx] [$y + $dy] $dx $dy
+        } else {true}        
+    } {
+        if {dict $boxes has ${x},${y}} {
+            set boxes [
+                dict $boxes
+                |> dict remove ${x},${y}
+                |> dict add [$x + $dx],[$y + $dy] true
+            ]
+        }
+        true
+    } else {
+        false
+    }
+}
+
+set (walls boxes pos) $(origwalls origboxes origpos)
+
+set (x y) $pos
+list [string $movements split ""] foreach movement {
+    set (dx dy) [when (string $movement ==) {
+        ^ {tuple ( 0 -1)}
+        v {tuple ( 0  1)}
+        > {tuple ( 1  0)}
+        < {tuple (-1  0)}
+          {continue}
+    }]
+    set moved [move $x $y $dx $dy]
+    if $moved {
+        set (x y) ([$x + $dx] [$y + $dy])
+    }
+}
+
+set sum 0
+dict $boxes foreach (p) {
+    set (x y) [tuple [string $p split ,]]
+    set sum [$sum + $x + $y * 100]
+}
+get sum # => result = 1383666
+
+# --- Part Two ---
+
+set example3 "#######
+#...#.#
+#.....#
+#..OO@#
+#..O..#
+#.....#
+#######
+
+<vv<<^^<<^^
+"
+set input $example3
+
+set (warehouse movements) [tuple [string $input split \n\n]]
+
+set walls [dict ()]
+set boxes [dict ()]
+set y 0
+set x 0
+set i 0
+while {$i < [string $warehouse length]} {
+    when (string $warehouse[$i] ==) {
+        \n  {set (x y i) (0 [$y + 1] [$i + 1]); continue}
+        @   {set pos $(x y)}
+        "#" {set walls [dict $walls merge (${x},${y} true [$x + 1],${y} true)]}
+        O   {set boxes [dict $boxes merge (${x},${y} 1 [$x + 1],${y} -1)]}
+    }
+    set (x i) ([$x + 2] [$i + 1])
+}
+set (origwalls origboxes origpos) $(walls boxes pos)
+
+macro movable {x y dx dy} {
+    if {dict $walls has [$x + $dx],[$y + $dy]} {
+        false
+    } elseif {dict $boxes has [$x + $dx],[$y + $dy]} {
+        if [$dy == 0] {
+            # Horizontal push
+            movable [$x + $dx] $y $dx $dy
+        } else {
+            # Vertical push for both half-boxes
+            && {movable $x [$y + $dy] $dx $dy} {movable [$x + $boxes(${x},[$y + $dy])] [$y + $dy] $dx $dy} 
+        }
+    } else {true}
+}
+macro push {x y dx dy} {
+    if [dict $boxes has [$x + $dx],[$y + $dy]] {
+        if [$dy == 0] {
+            # Horizontal push
+            push [$x + $dx] $y $dx $dy
+        } else {
+            # Vertical push for both half-boxes
+            push [$x + $boxes(${x},[$y + $dy])] [$y + $dy] $dx $dy
+            push $x [$y + $dy] $dx $dy
+        }
+    }
+    if [dict $boxes has ${x},${y}] {
+        set boxes [
+            dict $boxes add [$x + $dx],[$y + $dy] $boxes(${x},${y})
+            |> dict remove ${x},${y}
+        ]
+    }
+}
+macro move {x y dx dy} {
+    if [movable $x $y $dx $dy] {
+        push $x $y $dx $dy
+        true
+    } else {false}
+}
+
+
+set (walls boxes pos) $(origwalls origboxes origpos)
+
+set (x y) $pos
+list [string $movements split ""] foreach movement {
+    set (dx dy) [when (string $movement ==) {
+        ^ {tuple ( 0 -1)}
+        v {tuple ( 0  1)}
+        > {tuple ( 1  0)}
+        < {tuple (-1  0)}
+          {continue}
+    }]
+    set moved [move $x $y $dx $dy]
+    if $moved {
+        set (x y) ([$x + $dx] [$y + $dy])
+    }
+}
+
+set sum 0
+dict $boxes foreach (p dx) {
+    set (x y) [tuple [string $p split ,]]
+    if [$dx == 1] {set sum [$sum + $x + $y * 100]}
+}
+get sum # => result = 1412866
+

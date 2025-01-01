@@ -1,0 +1,141 @@
+import node:fs (fs)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 12: Garden Grots ---
+
+set example "RRRRIICCFF
+RRRRIICCCF
+VVRRRCCFFF
+VVRCCCJFFF
+VVVVCJJCFE
+VVIVCCJJEE
+VVIIICJJEE
+MIIIIIJJEE
+MIIISIJEEE
+MMMISSJEEE
+"
+set input [fs readFileSync adventofcode2024/12.input.txt [dict (encoding utf8)]]
+
+set grid [list ()]
+list [string $input split \n] foreach line {
+    if [string $line == ""] {break}
+    set row [list ()]
+    list [string $line split ""] foreach c {
+        set row [list $row append ($c)]
+    }
+    set grid [list $grid append ($row)]
+}
+set width [list $row length]
+set height [list $grid length]
+
+macro min {a b} {get [[$a < $b] ? a b]}
+
+set regions [list ()]
+set aliases [dict ()]
+macro resolve {alias} {
+    if [dict $aliases has $alias] {resolve $aliases($alias)} else {get alias}
+}
+
+set y 0
+set nextregion 0
+while {$y < $height} {
+    set x 0
+    set row [list ()]
+    while {$x < $width} {
+        set current $grid[$y][$x]
+        set t [get grid[$y - 1][$x] ""]
+        set l [get grid[$y][$x - 1] ""]
+        if {string $current == $t} {
+            set region [resolve $regions[$y - 1][$x]]
+            if [string $current == $l] {
+                set region2 [resolve $row[$x - 1]]
+                if [$region2 > $region] {
+                    set aliases [dict $aliases add $region2 $region]
+                } elseif [$region > $region2] {
+                    set aliases [dict $aliases add $region $region2]
+                }
+            }
+        } elseif {string $current == $l} {
+            set region [resolve $row[$x - 1]]
+        } else {
+            set region $nextregion
+            set nextregion [$nextregion + 1]
+        }
+        set row [list $row append ($region)]
+        set x [$x + 1]
+    }
+    set regions [list $regions append ($row)]
+    set y [$y + 1]
+}
+
+set areas [dict ()]
+set perimeters [dict ()]
+set y 0
+while {$y < $height} {
+    set x 0
+    while {$x < $width} {
+        set region [resolve $regions[$y][$x]]
+        set t [resolve [get regions[$y - 1][$x] -1]]
+        set d [resolve [get regions[$y + 1][$x] -1]]
+        set l [resolve [get regions[$y][$x - 1] -1]]
+        set r [resolve [get regions[$y][$x + 1] -1]]
+        set areas [dict $areas add $region [[get areas($region) 0] + 1]]
+        set p [(+
+            [[$region == $t] ? 0 1]
+            [[$region == $d] ? 0 1]
+            [[$region == $l] ? 0 1]
+            [[$region == $r] ? 0 1]
+        )]
+        set perimeters [dict $perimeters add $region [[get perimeters($region) 0] + $p]]
+        set x [$x + 1]
+    }
+    set y [$y + 1]
+}
+
+set price 0
+dict $areas foreach (region area) {
+    set price [$price + [$area * $perimeters($region)]]
+}
+get price # => result = 1396562
+
+# --- Part Two ---
+
+set sides [dict ()]
+set y 0
+while {$y < $height} {
+    set x 0
+    while {$x < $width} {
+        set region [resolve $regions[$y][$x]]
+        set tl [resolve [get regions[$y - 1][$x - 1] -1]]
+        set t  [resolve [get regions[$y - 1][$x    ] -1]]
+        set tr [resolve [get regions[$y - 1][$x + 1] -1]]
+        set l  [resolve [get regions[$y    ][$x - 1] -1]]
+        set r  [resolve [get regions[$y    ][$x + 1] -1]]
+        set bl [resolve [get regions[$y + 1][$x - 1] -1]]
+        set b  [resolve [get regions[$y + 1][$x    ] -1]]
+        set br [resolve [get regions[$y + 1][$x + 1] -1]]
+        # The number of sides equals the number of corners
+        set s [(+
+            # Outward
+            [[&& [$region != $t] [$region != $l]] ? 1 0]
+            [[&& [$region != $t] [$region != $r]] ? 1 0]
+            [[&& [$region != $b] [$region != $l]] ? 1 0]
+            [[&& [$region != $b] [$region != $r]] ? 1 0]
+            # Inward
+            [[&& [$region == $t] [$region == $l] [$region != $tl]] ? 1 0]
+            [[&& [$region == $t] [$region == $r] [$region != $tr]] ? 1 0]
+            [[&& [$region == $b] [$region == $l] [$region != $bl]] ? 1 0]
+            [[&& [$region == $b] [$region == $r] [$region != $br]] ? 1 0]
+        )]
+        set sides [dict $sides add $region [[get sides($region) 0] + $s]]
+        set x [$x + 1]
+    }
+    set y [$y + 1]
+}
+
+set price 0
+dict $areas foreach (region area) {
+    set price [$price + [$area * $sides($region)]]
+}
+get price # => result = 844132

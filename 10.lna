@@ -1,0 +1,96 @@
+import node:fs (fs)
+load adventofcode2024/adventofcode2024 adventofcode2024
+[string] eval {import adventofcode2024 ((splitString split))}
+
+# --- Day 10: Hoof It ---
+
+set example "89010123
+78121874
+87430965
+96549874
+45678903
+32019012
+01329801
+10456732
+"
+set input [fs readFileSync adventofcode2024/10.input.txt [dict (encoding utf8)]]
+
+set grid [list ()]
+set starts [list ()]
+list [string $input split \n] foreach line {
+    if [$line == ""] {break}
+    set row [list ()]
+    list [string $line split ""] foreach height {
+        set row [list $row append ($height)]
+    }
+    set grid [list $grid append ($row)]
+}
+
+proc getReachables {grid x y} {
+    set reachable [list ()]
+    set height $grid[$y][$x]
+    list (([$x - 1] $y) ([$x + 1] $y) ($x [$y - 1]) ($x [$y + 1])) foreach (x2 y2) {
+        set height2 [get grid[$y2][$x2] 9999]
+        if [[$height2 - $height] == 1] {set reachable [list $reachable append (($x2 $y2))]}
+    }
+    return $reachable
+}
+proc getScore {grid x y} {
+    set starts [list (($x $y))]
+    set height 0
+    while {$height < 9} {
+        set reachables [dict ()]
+        list $starts foreach (x y) {
+            list [getReachables $grid $x $y] foreach (x2 y2) {
+                set reachables [dict $reachables add ${x2},${y2} true]
+            }
+        }
+        if [[dict $reachables size] == 0] {return 0}
+        set starts [list ()]
+        dict $reachables foreach (pos) {
+            set (x y) [tuple [string $pos split ,]]
+            set starts [list $starts append (($x $y))]
+        }
+        set height [$height + 1]
+    }
+    return [dict $reachables size]
+}
+
+set score 0
+set y 0
+list $grid foreach row {
+    set x 0
+    list $row foreach height {
+        if [$height == 0] {
+            set score [$score + [getScore $grid $x $y]]
+        }
+        set x [$x + 1]
+    }
+    set y [$y + 1]
+}
+get score # => result = 659
+
+# --- Part Two ---
+
+proc getScore2 {grid x y} {
+    if [$grid[$y][$x] == 9] {return 1}
+    set nb 0
+    list [getReachables $grid $x $y] foreach (x2 y2) {
+        set nb [$nb + [getScore2 $grid $x2 $y2]]
+    }
+    return $nb
+}
+
+set score 0
+set y 0
+list $grid foreach row {
+    set x 0
+    list $row foreach height {
+        if [$height == 0] {
+            set score [$score + [getScore2 $grid $x $y]]
+        }
+        set x [$x + 1]
+    }
+    set y [$y + 1]
+}
+get score # => result = 659

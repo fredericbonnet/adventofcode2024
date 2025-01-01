@@ -1,0 +1,71 @@
+import node:fs (fs)
+
+# --- Day 4: Ceres Search ---
+
+let example "MMMSXXMASM
+MSAMXMSMSA
+AMXSXMAAMM
+MSAMASMSMX
+XMASAMXAMM
+XXAMMXXAMA
+SMSMSASXSS
+SAXAMASAAA
+MAMMMXMMMM
+MXMXAXMASX
+"
+let input [fs readFileSync adventofcode2024/4.input.txt [dict (encoding utf8)]]
+
+set len 0
+while {string $input[$len] != \n} {set len [$len + 1]}
+set len [$len + 1] # EOL counts as a character
+
+proc matchXMAS {input i stride} {
+    if [|| {[$i + $stride * 3] < 0} {[$i + $stride * 3] >= [string $input length]}] {return 0}
+    if [string X != $input[$i]              ] {return 0}
+    if [string M != $input[$i + $stride]    ] {return 0}
+    if [string A != $input[$i + $stride * 2]] {return 0}
+    if [string S != $input[$i + $stride * 3]] {return 0}
+    return 1
+}
+
+set stridesXMAS [list (
+    1           # Horizontal
+    $len        # Vertical
+    [$len - 1]  # Diagonal 1
+    [$len + 1]  # Diagonal 2
+)]
+
+set count 0
+set i 0
+while {$i < [string $input length]} {
+    list $stridesXMAS foreach stride {
+        set count [$count + [matchXMAS $input $i $stride] + [matchXMAS $input $i -$stride]]
+    }
+    set i [$i + 1]
+}
+get count # => result = 2358
+
+# --- Part Two ---
+
+proc matchMAS {input i stride} {
+    if [|| {[$i - $stride] < 0} {[$i - $stride] >= [string $input length]}] {return false}
+    if [|| {[$i + $stride] < 0} {[$i + $stride] >= [string $input length]}] {return false}
+    if [string M != $input[$i - $stride]] {return false}
+    if [string A != $input[$i          ]] {return false}
+    if [string S != $input[$i + $stride]] {return false}
+    return true
+}
+
+set stride1 [$len - 1]
+set stride2 [$len + 1]
+
+set count 0
+set i 0
+while {$i < [string $input length]} {
+    if [&& [matchMAS $input $i  $stride1] [matchMAS $input $i  $stride2]] {set count [$count + 1]}
+    if [&& [matchMAS $input $i  $stride1] [matchMAS $input $i -$stride2]] {set count [$count + 1]}
+    if [&& [matchMAS $input $i -$stride1] [matchMAS $input $i  $stride2]] {set count [$count + 1]}
+    if [&& [matchMAS $input $i -$stride1] [matchMAS $input $i -$stride2]] {set count [$count + 1]}
+    set i [$i + 1]
+}
+get count # => result = 1737
