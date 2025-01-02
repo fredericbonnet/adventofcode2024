@@ -83,7 +83,10 @@ dict $path foreach (blockpos) {
     set (x y) [tuple [string $blockpos split ,]]
     set blocks2 [dict $blocks add ${x},${y} true]
     
-    set pathdirs [dict ()]
+    namespace pathdirs {
+        macro has {k} {exists $k}
+        macro add {k} {set $k true}
+    }
     set pos $initialpos
     set dir (0 -1)
     while true {
@@ -91,12 +94,12 @@ dict $path foreach (blockpos) {
         if [$x == -1] {break}
         set (dx dy) $dir
         set k ${x},${y},${dx},${dy}
-        if [dict $pathdirs has $k] {
+        if [pathdirs has $k] {
             console log "\t found $blockpos"
             set nbObstructions [$nbObstructions + 1]
             break
         }
-        set pathdirs [dict $pathdirs add $k true]
+        pathdirs add $k
         set (pos dir) [advance $width $height $blocks2 $pos $dir]
     }
 }
