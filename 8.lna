@@ -1,5 +1,4 @@
-import javascript:console (console)
-import node:fs (fs)
+import adventofcode2024/utils.lna (console readFile)
 import javascript:RegExp (RegExp)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
@@ -21,7 +20,7 @@ set example "............
 ............
 ............
 "
-set input [fs readFileSync adventofcode2024/8.input.txt [dict (encoding utf8)]]
+set input [readFile adventofcode2024/8.input.txt]
 
 console time parse
 set re [RegExp new {[0-9A-Za-z]}]

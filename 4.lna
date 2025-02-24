@@ -1,5 +1,4 @@
-import javascript:console (console)
-import node:fs (fs)
+import adventofcode2024/utils.lna (console readFile)
 
 # --- Day 4: Ceres Search ---
 
@@ -16,7 +15,7 @@ SAXAMASAAA
 MAMMMXMMMM
 MXMXAXMASX
 "
-let input [fs readFileSync adventofcode2024/4.input.txt [dict (encoding utf8)]]
+let input [readFile adventofcode2024/4.input.txt]
 
 set len 0
 while {string $input[$len] != \n} {set len [$len + 1]}

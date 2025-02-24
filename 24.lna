@@ -1,5 +1,4 @@
-import javascript:console (console)
-import node:fs (fs)
+import adventofcode2024/utils.lna (console readFile)
 load adventofcode2024/adventofcode2024 adventofcode2024
 import adventofcode2024 (xor pow2)
 [string] eval {import adventofcode2024 ((splitString split))}
@@ -59,7 +58,7 @@ tnw OR pbm -> gnj
 "
 set input $example
 
-set input [fs readFileSync adventofcode2024/24.input.txt [dict (encoding utf8)]]
+set input [readFile adventofcode2024/24.input.txt]
 
 console time parse
 set (section1 section2) [tuple [string $input split \n\n]]
@@ -225,7 +224,7 @@ while true {
 # ggr XOR hnd -> kwb    ->      ggr XOR hnd -> z12
 # x12 AND y12 -> z12    ->      x12 AND y12 -> kwb
 
-set input [fs readFileSync adventofcode2024/24.fixed.txt [dict (encoding utf8)]]
+set input [readFile adventofcode2024/24.fixed.txt]
 
 set (section1 section2) [tuple [string $input split \n\n]]
 set wires [dict ()]

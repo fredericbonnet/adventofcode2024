@@ -1,5 +1,4 @@
-import javascript:console (console)
-import node:fs (fs)
+import adventofcode2024/utils.lna (console readFile)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
@@ -37,7 +36,7 @@ set input $example
 set size 6
 set max 12
 
-set input [fs readFileSync adventofcode2024/18.input.txt [dict (encoding utf8)]]
+set input [readFile adventofcode2024/18.input.txt]
 set size 70
 set max 1024
 

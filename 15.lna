@@ -1,5 +1,4 @@
-import javascript:console (console)
-import node:fs (fs)
+import adventofcode2024/utils.lna (console readFile)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
@@ -41,7 +40,7 @@ set example2 "########
 
 <^^>>>vv<v>>v<<"
 
-set input [fs readFileSync adventofcode2024/15.input.txt [dict (encoding utf8)]]
+set input [readFile adventofcode2024/15.input.txt]
 
 set (warehouse movements) [tuple [string $input split \n\n]]
 

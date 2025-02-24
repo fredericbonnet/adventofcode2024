@@ -1,12 +1,11 @@
-import javascript:console (console)
-import node:fs (fs)
+import adventofcode2024/utils.lna (console readFile)
 import javascript:RegExp (RegExp)
 
 # --- Day 3: Mull It Over ---
 
 console group "Part One"
 
-let input [fs readFileSync adventofcode2024/3.input.txt [dict (encoding utf8)]]
+let input [readFile adventofcode2024/3.input.txt]
 
 console time compute
 set re [RegExp new """mul\((\d+),(\d+)\)""" g]
