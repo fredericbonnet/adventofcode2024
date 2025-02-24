@@ -1,5 +1,4 @@
-import javascript:console (console)
-import node:fs (fs)
+import adventofcode2024/utils.lna (console readFile)
 
 # --- Day 16: Reindeer Maze ---
 
@@ -41,7 +40,7 @@ set example2 "#################
 "
 set input $example2
 
-set input [fs readFileSync adventofcode2024/16.input.txt [dict (encoding utf8)]]
+set input [readFile adventofcode2024/16.input.txt]
 
 console time parse
 set walls [dict ()]
@@ -114,10 +113,13 @@ while {$y < $height} {
 }
 
 # Now that we have the weighted graph, find the shorted weighted path between S and E
-macro getScore {p} {dict $scores get [maze coords $*p] -1}
-macro setScore {p score} {set scores [dict $scores add [maze coords $*p] $score]}
+namespace scores {
+    macro store {p score} {set [maze coords $*p] $score}
+    macro retrieve {p} {get [maze coords $*p] -1}
+}
+alias getScore (scores retrieve)
+alias setScore (scores store)
 
-set scores [dict ()]
 set current ($*start e)
 setScore $current 0
 set nextNodes [list (($current 0))]

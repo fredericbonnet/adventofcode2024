@@ -1,12 +1,11 @@
-import javascript:console (console)
-import node:fs (fs)
+import adventofcode2024/utils.lna (console readFile)
 
 # --- Day 9: Disk Fragmenter ---
 
 console group "Part One"
 
 set example "2333133121414131402"
-set input [fs readFileSync adventofcode2024/9.input.txt [dict (encoding utf8)]]
+set input [readFile adventofcode2024/9.input.txt]
 
 console time parse
 set blocks [list ()]
@@ -16,9 +15,8 @@ set i 0
 set id 0
 while {$i < $len} {
     set blocks [list $blocks append (($input[$i] $id))]
-    if [[$i + 1] < $len] {
-        set free [list $free append ($input[$i + 1])]
-    }
+    if [|| {[$i + 1] >= $len} {string $input[$i + 1] == "\n"}] {break}
+    set free [list $free append ($input[$i + 1])]
     set i [$i + 2]
     set id [$id + 1]
 }

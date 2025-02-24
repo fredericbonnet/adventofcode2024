@@ -1,5 +1,4 @@
-import javascript:console (console)
-import node:fs (fs)
+import adventofcode2024/utils.lna (console readFile)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
@@ -39,7 +38,7 @@ set example "029A
 
 set input $example
 
-set input [fs readFileSync adventofcode2024/21.input.txt [dict (encoding utf8)]]
+set input [readFile adventofcode2024/21.input.txt]
 
 set codes [list ()]
 list [string $input split \n] foreach line {

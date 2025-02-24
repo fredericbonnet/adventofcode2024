@@ -1,0 +1,36 @@
+catch {
+    import javascript:console (console)
+    import node:fs (fs)
+    closure readFile {path} {
+        fs readFileSync $path [dict (encoding utf8)]
+    }    
+} error _ {
+    import go:slog (slog)
+    import go:os (os)
+    namespace console {
+        set indent ""
+
+        # Emulate the console object from JavaScript for the methods we use
+        macro group {name} {
+            slog Info $name
+            set indent "  "
+        }
+        macro groupEnd {name} {
+            set indent ""
+        }
+        macro time {name} {
+            slog Info "${indent}${name} begin"
+        }
+        macro timeEnd {name} {
+            slog Info "${indent}${name} end"
+        }
+        macro log {a (?b "")} {
+            slog Info "${a} ${b}"
+        }
+    }
+    closure readFile {path} {
+        os ReadFile $path
+    }    
+}
+export console
+export readFile

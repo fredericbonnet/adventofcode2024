@@ -1,5 +1,4 @@
-import javascript:console (console)
-import node:fs (fs)
+import adventofcode2024/utils.lna (console readFile)
 import javascript:RegExp (RegExp)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
@@ -16,7 +15,7 @@ Register C: 0
 Program: 0,1,5,4,3,0
 "
 
-set input [fs readFileSync adventofcode2024/17.input.txt [dict (encoding utf8)]]
+set input [readFile adventofcode2024/17.input.txt]
 
 set re [RegExp new """Register A: (\d+)\nRegister B: (\d+)\nRegister C: (\d+)\n\nProgram: (.+)""" g]
 set m $[dict [RegExp exec $re $input]](matches)

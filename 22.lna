@@ -1,5 +1,4 @@
-import javascript:console (console)
-import node:fs (fs)
+import adventofcode2024/utils.lna (console readFile)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 import adventofcode2024 (xor mod floor)
@@ -14,7 +13,7 @@ set example "1
 2024
 "
 
-set input [fs readFileSync adventofcode2024/22.input.txt [dict (encoding utf8)]]
+set input [readFile adventofcode2024/22.input.txt]
 
 set secrets [list ()]
 list [string $input split \n] foreach line {
