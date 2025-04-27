@@ -1,7 +1,6 @@
 import adventofcode2024/utils.lna (console readFile)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
-[list] eval {import adventofcode2024 (sortInts)}
 
 # --- Day 20: Race Condition ---
 
@@ -131,7 +130,7 @@ dict $walls foreach (pos) {
     }
 }
 set nb 0
-list [list $cheats sortInts] foreach cheat {
+list [list $cheats sort -] foreach cheat {
     if [$cheat >= $minsaved] {set nb [$nb + 1]}
 }
 console timeEnd compute

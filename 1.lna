@@ -1,6 +1,4 @@
 import adventofcode2024/utils.lna (console)
-load adventofcode2024/adventofcode2024 adventofcode2024
-[list] eval {import adventofcode2024 (sortInts)}
 
 # --- Day 1: Historian Hysteria ---
 
@@ -24,8 +22,8 @@ list $input foreach (v1 v2) {
     set l2 [list $l2 append ($v2)]
 }
 
-set l1 [list $l1 sortInts]
-set l2 [list $l2 sortInts]
+set l1 [list $l1 sort -]
+set l2 [list $l2 sort -]
 
 set i 0
 set distance 0

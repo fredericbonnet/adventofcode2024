@@ -13,7 +13,6 @@ import { OK } from "../helena/src/core/results";
 import {
   IntegerValue,
   LIST,
-  ListValue,
   STR,
   INT,
   DICT,
@@ -31,9 +30,6 @@ export function initModule(): Module {
   const scope = Scope.newRootScope();
   const exports = new Map();
   const module = new Module(scope, exports);
-  exportCommand(module, "sortStrings", sortStringsCmd);
-  exportCommand(module, "sortInts", sortIntsCmd);
-  exportCommand(module, "sortReals", sortRealsCmd);
   exportCommand(module, "splitString", splitStringCmd);
   exportCommand(module, "pow2", pow2Cmd);
   exportCommand(module, "floor", floorCmd);
@@ -49,41 +45,6 @@ function exportCommand(module: Module, name, cmd) {
   module.exports.set(name, STR(name));
 }
 
-const sortStringsCmd: Command = {
-  execute: (args: Value[]) => {
-    return OK(
-      LIST(
-        ListValue.toValues(args[1])[1].sort((a, b) => {
-          const sa = StringValue.toString(a)[1];
-          const sb = StringValue.toString(b)[1];
-          return sa < sb ? -1 : sa > sb ? 1 : 0;
-        })
-      )
-    );
-  },
-};
-const sortIntsCmd: Command = {
-  execute: (args: Value[]) => {
-    return OK(
-      LIST(
-        ListValue.toValues(args[1])[1].sort(
-          (a, b) => IntegerValue.toInteger(a)[1] - IntegerValue.toInteger(b)[1]
-        )
-      )
-    );
-  },
-};
-const sortRealsCmd: Command = {
-  execute: (args: Value[]) => {
-    return OK(
-      LIST(
-        ListValue.toValues(args[1])[1].sort(
-          (a, b) => RealValue.toNumber(a)[1] - RealValue.toNumber(b)[1]
-        )
-      )
-    );
-  },
-};
 const splitStringCmd: Command = {
   execute: (args: Value[]) => {
     return OK(
