@@ -22,24 +22,15 @@ import {
   Value,
 } from "../helena/src/core/values";
 import { Scope } from "../helena/src/helena-dialect/core";
-import { Module, ModuleRegistry } from "../helena/src/helena-dialect/modules";
-
-function exportCommand(module: Module, name, cmd) {
-  module.scope.registerNamedCommand(name, cmd);
-  module.exports.set(name, STR(name));
-}
+import { Module } from "../helena/src/helena-dialect/modules";
 
 /**
  * Main dynamic module entry point.
- *
- * @param moduleRegistry - Module registry
- * @param moduleName     - Module name to use for registration
  */
-export function register(moduleRegistry: ModuleRegistry, moduleName: string) {
+export function initModule(): Module {
   const scope = Scope.newRootScope();
   const exports = new Map();
   const module = new Module(scope, exports);
-  moduleRegistry.register(moduleName, module);
   exportCommand(module, "sortStrings", sortStringsCmd);
   exportCommand(module, "sortInts", sortIntsCmd);
   exportCommand(module, "sortReals", sortRealsCmd);
@@ -50,6 +41,12 @@ export function register(moduleRegistry: ModuleRegistry, moduleName: string) {
   exportCommand(module, "xor", xorCmd);
   exportCommand(module, "mod", modCmd);
   exportCommand(module, "variables", variablesCmd);
+  return module;
+}
+
+function exportCommand(module: Module, name, cmd) {
+  module.scope.registerNamedCommand(name, cmd);
+  module.exports.set(name, STR(name));
 }
 
 const sortStringsCmd: Command = {
