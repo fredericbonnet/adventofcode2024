@@ -9,8 +9,7 @@ let input [readFile adventofcode2024/3.input.txt]
 console time compute
 set re """mul\((\d+),(\d+)\)"""
 set sum 0
-loop match [regexp matchAll $re $input] {
-    set m $match(matches)
+loop m [regexp findAll $re $input] {
     set sum [$sum + $m[1] * $m[2]]
 }
 console timeEnd compute
@@ -26,8 +25,7 @@ console time compute
 set re """(?<mul>mul\((?<v1>\d+),(?<v2>\d+)\))|(?<do>do\(\))|(?<dont>don't\(\))"""
 set do true
 set sum 0
-loop match [regexp matchAll $re $input] {
-    set groups $match(groups)
+loop groups [regexp findAllGroups $re $input] {
     if {dict $groups has mul} {
         if $do {
             set sum [$sum + $groups(v1) * $groups(v2)]

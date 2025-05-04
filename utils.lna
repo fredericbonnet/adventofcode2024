@@ -9,8 +9,11 @@ catch {
         macro test {re s} {
             RegExp test [RegExp new $re] $s
         }
-        macro matchAll {re s} {
-            RegExp Symbol.matchAll [RegExp new $re g] $s
+        macro findAll {re s} {
+            list $[tuple [RegExp Symbol.matchAll [RegExp new $re g] $s]](matches)
+        }
+        macro findAllGroups {re s} {
+            list $[tuple [RegExp Symbol.matchAll [RegExp new $re g] $s]](groups)
         }
     }
 } error _ {
@@ -42,7 +45,37 @@ catch {
     }
     closure readFile {path} {
         os ReadFile $path
-    }    
+    }
+    import go:regexp ((regexp go_regexp))
+    namespace regexp {
+        macro test {re s} {
+            go_regexp MatchString [go_regexp Compile $re] $s
+        }
+        macro findAll {re s} {
+            go_regexp FindAllStringSubmatch [go_regexp Compile $re] $s -1
+        }
+        proc findAllGroups {re s} {
+            set result [list ()]
+            set re [go_regexp Compile $re]
+            set groupIndexes [dict ()]
+            loop name [go_regexp SubexpNames $re] {
+                if [string $name == ""] {continue}
+                set groupIndexes [dict $groupIndexes add $name [go_regexp SubexpIndex $re $name]]
+            }
+            loop sm [go_regexp FindAllStringSubmatch $re $s -1] {
+                set submatches $sm
+                set groups [dict ()]
+                dict $groupIndexes foreach (name index) {
+                    set value $submatches[$index]
+                    if [string $value != ""] {
+                        set groups [dict $groups add $name $value]
+                    }
+                }
+                set result [list $result append ($groups)]
+            }
+            return $result
+        }
+    }
 }
 export console
 export readFile

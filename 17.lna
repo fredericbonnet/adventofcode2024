@@ -17,7 +17,7 @@ Program: 0,1,5,4,3,0
 set input [readFile adventofcode2024/17.input.txt]
 
 set re """Register A: (\d+)\nRegister B: (\d+)\nRegister C: (\d+)\n\nProgram: (.+)"""
-set m $[regexp matchAll $re $input][0](matches)
+set m $[regexp findAll $re $input][0]
 set (_ rega regb regc program) [tuple $m]
 set opcodes [string $program split ,]
 set registers $(rega regb regc)

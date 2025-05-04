@@ -30,8 +30,7 @@ set height 103
 console time parse
 set re """p=(\d+),(\d+) v=(-?\d+),(-?\d+)\n"""
 set robots [list ()]
-loop match [regexp matchAll $re $input] { 
-    set m $match(matches)
+loop m [regexp findAll $re $input] { 
     set (_ px py vx vy) [tuple $m]
     set robots [list $robots append ($(px py vx vy))]
 }

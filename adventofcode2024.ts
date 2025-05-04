@@ -33,7 +33,6 @@ export function initModule(): Module {
   exportCommand(module, "splitString", splitStringCmd);
   exportCommand(module, "pow2", pow2Cmd);
   exportCommand(module, "floor", floorCmd);
-  exportCommand(module, "round", roundCmd);
   exportCommand(module, "xor", xorCmd);
   exportCommand(module, "mod", modCmd);
   exportCommand(module, "variables", variablesCmd);
@@ -49,8 +48,8 @@ const splitStringCmd: Command = {
   execute: (args: Value[]) => {
     return OK(
       LIST(
-        StringValue.toString(args[1])[1]
-          .split(StringValue.toString(args[2])[1])
+        StringValue.toString(args[1])[1]!
+          .split(StringValue.toString(args[2])[1]!)
           .map(STR)
       )
     );
@@ -58,17 +57,12 @@ const splitStringCmd: Command = {
 };
 const pow2Cmd: Command = {
   execute: (args: Value[]) => {
-    return OK(INT(Math.pow(2, IntegerValue.toInteger(args[1])[1])));
+    return OK(INT(Math.pow(2, IntegerValue.toInteger(args[1])[1]!)));
   },
 };
 const floorCmd: Command = {
   execute: (args: Value[]) => {
-    return OK(INT(Math.floor(RealValue.toNumber(args[1])[1])));
-  },
-};
-const roundCmd: Command = {
-  execute: (args: Value[]) => {
-    return OK(INT(Math.round(RealValue.toNumber(args[1])[1])));
+    return OK(INT(Math.floor(RealValue.toNumber(args[1])[1]!)));
   },
 };
 const xorCmd: Command = {
@@ -76,8 +70,8 @@ const xorCmd: Command = {
     return OK(
       INT(
         Number(
-          BigInt(IntegerValue.toInteger(args[1])[1]) ^
-            BigInt(IntegerValue.toInteger(args[2])[1])
+          BigInt(IntegerValue.toInteger(args[1])[1]!) ^
+            BigInt(IntegerValue.toInteger(args[2])[1]!)
         )
       )
     );
@@ -87,14 +81,14 @@ const modCmd: Command = {
   execute: (args: Value[]) => {
     return OK(
       INT(
-        IntegerValue.toInteger(args[1])[1] % IntegerValue.toInteger(args[2])[1]
+        IntegerValue.toInteger(args[1])[1]! %
+          IntegerValue.toInteger(args[2])[1]!
       )
     );
   },
 };
 const variablesCmd: Command = {
   execute: (args: Value[], scope: Scope) => {
-    scope.context.variables;
     return OK(DICT(scope.context.variables));
   },
 };

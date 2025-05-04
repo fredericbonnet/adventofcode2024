@@ -108,6 +108,8 @@ console groupEnd "Part One"
 
 # --- Part Two ---
 
+exit
+
 # I really don't want to find a programmatic solution here (I'm a bit tired of combinatory logic TBH), so I'll study the input carefully instead
 
 # Assumption: all initial input wires are either x or y

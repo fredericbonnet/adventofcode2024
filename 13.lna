@@ -28,8 +28,7 @@ set input [readFile adventofcode2024/13.input.txt]
 console time parse
 set re """Button A: X\+(\d+), Y\+(\d+)\nButton B: X\+(\d+), Y\+(\d+)\nPrize: X=(\d+), Y=(\d+)"""
 set machines [list ()]
-loop match [regexp matchAll $re $input] { 
-    set m $match(matches)
+loop m [regexp findAll $re $input] { 
     set (_ ax ay bx by px py) [tuple $m]
     set machines [list $machines append ([dict (ax $ax ay $ay bx $bx by $by px $px py $py) ])]
 }
@@ -85,8 +84,7 @@ console group "Part Two"
 
 console time parse
 set machines [list ()]
-loop match [regexp matchAll $re $input] { 
-    set m $match(matches)
+loop m [regexp findAll $re $input] { 
     set (_ ax ay bx by px py) [tuple $m]
     set machines [list $machines append ([dict (ax $ax ay $ay bx $bx by $by px [$px + 10000000000000] py [$py + 10000000000000]) ])]
 }
