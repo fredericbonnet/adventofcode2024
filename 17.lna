@@ -1,5 +1,4 @@
-import adventofcode2024/utils.lna (console readFile)
-import javascript:RegExp (RegExp)
+import adventofcode2024/utils.lna (console readFile regexp)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 import adventofcode2024 (pow2 floor xor mod)
@@ -17,8 +16,8 @@ Program: 0,1,5,4,3,0
 
 set input [readFile adventofcode2024/17.input.txt]
 
-set re [RegExp new """Register A: (\d+)\nRegister B: (\d+)\nRegister C: (\d+)\n\nProgram: (.+)""" g]
-set m $[dict [RegExp exec $re $input]](matches)
+set re """Register A: (\d+)\nRegister B: (\d+)\nRegister C: (\d+)\n\nProgram: (.+)"""
+set m $[regexp matchAll $re $input][0](matches)
 set (_ rega regb regc program) [tuple $m]
 set opcodes [string $program split ,]
 set registers $(rega regb regc)

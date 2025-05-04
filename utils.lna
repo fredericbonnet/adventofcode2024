@@ -3,7 +3,16 @@ catch {
     import node:fs (fs)
     closure readFile {path} {
         fs readFileSync $path [dict (encoding utf8)]
-    }    
+    }
+    import javascript:RegExp (RegExp)
+    namespace regexp {
+        macro test {re s} {
+            RegExp test [RegExp new $re] $s
+        }
+        macro matchAll {re s} {
+            RegExp Symbol.matchAll [RegExp new $re g] $s
+        }
+    }
 } error _ {
     import go:slog (slog)
     import go:os (os)
@@ -24,6 +33,9 @@ catch {
         macro timeEnd {name} {
             slog Info "${indent}${name} end"
         }
+        macro timeLog {name (?a "") (?b "") (?c "") (?d "") *} {
+            slog Info "${indent}${name} ${a} ${b} ${c} ${d}"
+        }
         macro log {a (?b "")} {
             slog Info "${a} ${b}"
         }
@@ -34,3 +46,4 @@ catch {
 }
 export console
 export readFile
+export regexp

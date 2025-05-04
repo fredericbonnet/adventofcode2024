@@ -1,5 +1,4 @@
-import adventofcode2024/utils.lna (console readFile)
-import javascript:RegExp (RegExp)
+import adventofcode2024/utils.lna (console readFile regexp)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
@@ -35,14 +34,14 @@ list $patterns foreach p {
         set r ${r}|$p
     }
 }
-set re [RegExp new "^($r)+\$"]
+set re "^($r)+\$"
 console timeEnd parse
 
 console time compute
 set nb 0
 list [string $d split \n] foreach design {
     if [string $design == ""] {break}
-    set nb [$nb + [catch {dict [RegExp exec $re $design]; 1} error _ {0}]]
+    set nb [$nb + [[regexp test $re $design] ? 1 0]]
 }
 console timeEnd compute
 console log "result =" $nb # => result = 342
@@ -95,7 +94,7 @@ set i 0
 set designs [string $d split \n]
 list $designs foreach design {
     if [string $design == ""] {break}
-    if [catch {dict [RegExp exec $re $design]; true} error _ {false}] {
+    if [regexp test $re $design] {
         set nb [$nb + [matches $patterns $design]]
     }
     set i [$i + 1]

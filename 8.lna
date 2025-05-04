@@ -1,5 +1,4 @@
-import adventofcode2024/utils.lna (console readFile)
-import javascript:RegExp (RegExp)
+import adventofcode2024/utils.lna (console readFile regexp)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
@@ -23,14 +22,14 @@ set example "............
 set input [readFile adventofcode2024/8.input.txt]
 
 console time parse
-set re [RegExp new {[0-9A-Za-z]}]
+set re """[0-9A-Za-z]"""
 set antennas [dict ()]
 set y 0
 list [string $input split \n] foreach line {
     if [string $line == ""] {break}
     set x 0
     list [string $line split ""] foreach c {
-        if [RegExp test $re $c] {
+        if [regexp test $re $c] {
             set antennas [dict $antennas add $c [list [get antennas($c) ()] append (${x},${y})]]
         }
         set x [$x + 1]

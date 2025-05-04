@@ -21,7 +21,7 @@ console time parse
 set grid [list ()]
 set starts [list ()]
 list [string $input split \n] foreach line {
-    if [$line == ""] {break}
+    if [string $line == ""] {break}
     set row [list ()]
     list [string $line split ""] foreach height {
         set row [list $row append ($height)]

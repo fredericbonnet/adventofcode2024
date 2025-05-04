@@ -1,7 +1,6 @@
 import adventofcode2024/utils.lna (console readFile)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
-[list] eval {import adventofcode2024 (sortStrings)}
 
 # --- Day 23: LAN Party ---
 
@@ -67,7 +66,7 @@ dict $links foreach (link) {
     set (a b) [tuple [string $link split -]]
     dict $nodes($a) foreach (c) {
         if [dict $links has ${b}-${c}] {
-            set (n1 n2 n3) [tuple [list ($a $b $c) sortStrings]]
+            set (n1 n2 n3) [tuple [list ($a $b $c) sort]]
             set key ${n1},${n2},${n3}
             if [! [dict $groups has $key]] {
                 set groups [dict $groups add ${n1},${n2},${n3} true]
@@ -114,7 +113,7 @@ dict $nodes foreach (first neighbors) {
     }
 }
 set password ""
-list [list [dict $maxclique keys] sortStrings] foreach n {
+list [list [dict $maxclique keys] sort] foreach n {
     if [string $password == ""] {
         set password $n
     } else {

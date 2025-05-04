@@ -1,5 +1,4 @@
-import adventofcode2024/utils.lna (console readFile)
-import javascript:RegExp (RegExp)
+import adventofcode2024/utils.lna (console readFile regexp)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 import adventofcode2024 (floor)
@@ -27,14 +26,10 @@ Prize: X=18641, Y=10279
 set input [readFile adventofcode2024/13.input.txt]
 
 console time parse
-set re [RegExp new """Button A: X\+(\d+), Y\+(\d+)\nButton B: X\+(\d+), Y\+(\d+)\nPrize: X=(\d+), Y=(\d+)""" g]
+set re """Button A: X\+(\d+), Y\+(\d+)\nButton B: X\+(\d+), Y\+(\d+)\nPrize: X=(\d+), Y=(\d+)"""
 set machines [list ()]
-while true { 
-    catch {
-        set m $[dict [RegExp exec $re $input]](matches)
-    } error _ {
-        break
-    }
+loop match [regexp matchAll $re $input] { 
+    set m $match(matches)
     set (_ ax ay bx by px py) [tuple $m]
     set machines [list $machines append ([dict (ax $ax ay $ay bx $bx by $by px $px py $py) ])]
 }
@@ -90,12 +85,8 @@ console group "Part Two"
 
 console time parse
 set machines [list ()]
-while true { 
-    catch {
-        set m $[dict [RegExp exec $re $input]](matches)
-    } error _ {
-        break
-    }
+loop match [regexp matchAll $re $input] { 
+    set m $match(matches)
     set (_ ax ay bx by px py) [tuple $m]
     set machines [list $machines append ([dict (ax $ax ay $ay bx $bx by $by px [$px + 10000000000000] py [$py + 10000000000000]) ])]
 }

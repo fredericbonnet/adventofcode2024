@@ -1,5 +1,4 @@
-import adventofcode2024/utils.lna (console readFile)
-import javascript:RegExp (RegExp)
+import adventofcode2024/utils.lna (console readFile regexp)
 
 # --- Day 3: Mull It Over ---
 
@@ -8,15 +7,11 @@ console group "Part One"
 let input [readFile adventofcode2024/3.input.txt]
 
 console time compute
-set re [RegExp new """mul\((\d+),(\d+)\)""" g]
+set re """mul\((\d+),(\d+)\)"""
 set sum 0
-while true { 
-    catch {
-        set m $[dict [RegExp exec $re $input]](matches)
-        set sum [$sum + $m[1] * $m[2]]
-    } error _ {
-        break
-    }
+loop match [regexp matchAll $re $input] {
+    set m $match(matches)
+    set sum [$sum + $m[1] * $m[2]]
 }
 console timeEnd compute
 console log "result =" $sum # => result = 180233229
@@ -28,23 +23,19 @@ console groupEnd "Part One"
 console group "Part Two"
 
 console time compute
-set re [RegExp new """(?<mul>mul\((?<v1>\d+),(?<v2>\d+)\))|(?<do>do\(\))|(?<dont>don't\(\))""" g]
+set re """(?<mul>mul\((?<v1>\d+),(?<v2>\d+)\))|(?<do>do\(\))|(?<dont>don't\(\))"""
 set do true
 set sum 0
-while true {
-    catch {
-        set groups $[dict [RegExp exec $re $input]](groups)
-        if {dict $groups has mul} {
-            if $do {
-                set sum [$sum + $groups(v1) * $groups(v2)]
-            }
-        } elseif {dict $groups has do} {
-            set do true
-        } elseif {dict $groups has dont} {
-            set do false
+loop match [regexp matchAll $re $input] {
+    set groups $match(groups)
+    if {dict $groups has mul} {
+        if $do {
+            set sum [$sum + $groups(v1) * $groups(v2)]
         }
-    } error _ {
-        break
+    } elseif {dict $groups has do} {
+        set do true
+    } elseif {dict $groups has dont} {
+        set do false
     }
 }
 console timeEnd compute

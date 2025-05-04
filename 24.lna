@@ -2,7 +2,6 @@ import adventofcode2024/utils.lna (console readFile)
 load adventofcode2024/adventofcode2024 adventofcode2024
 import adventofcode2024 (xor pow2)
 [string] eval {import adventofcode2024 ((splitString split))}
-[list] eval {import adventofcode2024 (sortStrings)}
 
 # --- Day 24: Crossed Wires ---
 
@@ -155,7 +154,7 @@ list $connections foreach (input1 gate input2 output) {
 }
 set aliased ""
 list $connections foreach (input1 gate input2 output) {
-    set (i1 i2) [tuple [list $(input1 input2) sortStrings]]
+    set (i1 i2) [tuple [list $(input1 input2) sort]]
     set aliased "${aliased}$[get aliases($i1) $i1] $gate [get aliases($i2) $i2] -> [get aliases($output) $output]\n"
 }
 fs writeFileSync adventofcode2024/24.aliased.txt $aliased [dict (encoding utf8)]
@@ -194,11 +193,11 @@ macro substitute {} {
     }
     set aliasedlines [list ()]
     list $aliasedconnections foreach (input1 gate input2 output) {
-        set (i1 i2) [tuple [list $(input1 input2) sortStrings]]
+        set (i1 i2) [tuple [list $(input1 input2) sort]]
         set aliasedlines [list $aliasedlines append ("[get aliases($i1) $i1] $gate [get aliases($i2) $i2] -> [get aliases($output) $output]")]
     }
     set aliased ""
-    list [list $aliasedlines sortStrings] foreach line {
+    list [list $aliasedlines sort] foreach line {
         set aliased ${aliased}${line}\n
     }
     fs writeFileSync adventofcode2024/24.aliased.txt $aliased [dict (encoding utf8)]

@@ -1,5 +1,4 @@
-import adventofcode2024/utils.lna (console readFile)
-import javascript:RegExp (RegExp)
+import adventofcode2024/utils.lna (console readFile regexp)
 load adventofcode2024/adventofcode2024 adventofcode2024
 [string] eval {import adventofcode2024 ((splitString split))}
 
@@ -29,14 +28,10 @@ set width 101
 set height 103
 
 console time parse
-set re [RegExp new """p=(\d+),(\d+) v=(-?\d+),(-?\d+)\n""" g]
+set re """p=(\d+),(\d+) v=(-?\d+),(-?\d+)\n"""
 set robots [list ()]
-while true { 
-    catch {
-        set m $[dict [RegExp exec $re $input]](matches)
-    } error _ {
-        break
-    }
+loop match [regexp matchAll $re $input] { 
+    set m $match(matches)
     set (_ px py vx vy) [tuple $m]
     set robots [list $robots append ($(px py vx vy))]
 }
